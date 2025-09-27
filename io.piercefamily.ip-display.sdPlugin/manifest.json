@@ -9,13 +9,15 @@
 			"Icon": "imgs/actions/local-ip/icon",
 			"Tooltip": "Displays both local and public IP addresses. Press to refresh.",
 			"PropertyInspectorPath": "ui/ip-display.html",
+			"UserTitleEnabled": false,
 			"Controllers": [
 				"Keypad"
 			],
 			"States": [
 				{
 					"Image": "imgs/actions/local-ip/key",
-					"TitleAlignment": "middle"
+					"ShowTitle": false,
+					"Title": ""
 				}
 			]
 		},
@@ -25,13 +27,15 @@
 			"Icon": "imgs/actions/local-ip/icon",
 			"Tooltip": "Displays your local network IP address. Press to refresh.",
 			"PropertyInspectorPath": "ui/ip-display.html",
+			"UserTitleEnabled": false,
 			"Controllers": [
 				"Keypad"
 			],
 			"States": [
 				{
 					"Image": "imgs/actions/local-ip/key",
-					"TitleAlignment": "middle"
+					"ShowTitle": false,
+					"Title": ""
 				}
 			]
 		},
@@ -41,13 +45,15 @@
 			"Icon": "imgs/actions/local-ip/icon",
 			"Tooltip": "Displays your public internet IP address. Press to refresh.",
 			"PropertyInspectorPath": "ui/ip-display.html",
+			"UserTitleEnabled": false,
 			"Controllers": [
 				"Keypad"
 			],
 			"States": [
 				{
 					"Image": "imgs/actions/local-ip/key",
-					"TitleAlignment": "middle"
+					"ShowTitle": false,
+					"Title": ""
 				}
 			]
 		},
@@ -57,13 +63,15 @@
 			"Icon": "imgs/actions/local-ip/icon",
 			"Tooltip": "Toggles between dual, local, and public IP display modes. Press to cycle.",
 			"PropertyInspectorPath": "ui/ip-toggle.html",
+			"UserTitleEnabled": false,
 			"Controllers": [
 				"Keypad"
 			],
 			"States": [
 				{
 					"Image": "imgs/actions/local-ip/key",
-					"TitleAlignment": "middle"
+					"ShowTitle": false,
+					"Title": ""
 				}
 			]
 		}
