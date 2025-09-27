@@ -1,18 +1,33 @@
 # Stream Deck IP Display Plugin
 
-A Stream Deck plugin that displays your local and public IP addresses on a customizable button with real-time status indicators.
+A comprehensive Stream Deck plugin for IP address monitoring with four button types and configurable auto-refresh functionality.
 
 ## Features
 
+### Four Button Types
 - **Dual IP Display**: Shows both local network IP and public internet IP on a single button
+- **Local IP Display**: Shows only your local network IP address with centered layout
+- **Public IP Display**: Shows only your public internet IP address with centered layout
+- **IP Toggle Display**: Cycles between dual, local, and public IP modes on each press
+
+### Automatic Refresh
+- **Configurable Auto-Refresh**: Set intervals from 1 minute to 1 hour (default: 10 minutes)
+- **Manual Only Mode**: Disable auto-refresh for manual control only
+- **Smart Refresh**: Manual button press bypasses cache for immediate updates
+- **Efficient Timers**: Single timer per action type with proper lifecycle management
+
+### Visual Design
 - **Visual Status Indicator**: Color-coded connection status dot
-  - 🟢 Green: Both local and public IPs detected
-  - 🟠 Orange: Only one IP detected
-  - 🔴 Red: No connection detected
+  - 🟢 Green: IP(s) detected and connected
+  - 🔴 Red: No IP connection detected
 - **Transparent Background**: Clean design that works with any Stream Deck theme
-- **Auto-Refresh**: Press the button to manually refresh IP addresses
-- **Smart Caching**: Public IP is cached for 5 minutes to prevent API rate limiting
 - **High-Quality Rendering**: Canvas-based text rendering prevents truncation issues
+- **Optimized Layouts**: Single IP displays use larger fonts and centered positioning
+
+### Smart Features
+- **Settings Persistence**: Auto-refresh preferences saved across Stream Deck restarts
+- **API Rate Limiting**: Public IP cached for 5 minutes to prevent excessive API calls
+- **Multiple Instance Support**: Each button can have different refresh settings
 
 ## Installation
 
@@ -31,12 +46,20 @@ A Stream Deck plugin that displays your local and public IP addresses on a custo
 
 ## Usage
 
+### Adding Actions to Stream Deck
 1. Open Stream Deck software
-2. Drag the "Dual IP Display" action to any button
-3. The button will automatically display your current IP addresses
-4. Press the button to refresh the IP information
+2. Choose from four available IP Display actions:
+   - **Dual IP Display**: Shows both local and public IP
+   - **Local IP Display**: Shows only local IP
+   - **Public IP Display**: Shows only public IP
+   - **IP Toggle Display**: Cycles between all modes
+3. Drag your chosen action to any button
+4. The button will automatically display your current IP addresses
+5. Press the button to refresh the IP information or cycle modes (toggle only)
 
-### Button Layout
+### Button Layouts
+
+**Dual IP Display:**
 ```
 ┌─────────────────┐
 │    LOCAL IP     │
@@ -47,6 +70,36 @@ A Stream Deck plugin that displays your local and public IP addresses on a custo
 │       ●         │ ← Status dot
 └─────────────────┘
 ```
+
+**Single IP Display (Local/Public):**
+```
+┌─────────────────┐
+│                 │
+│    LOCAL IP     │
+│  192.168.1.100  │
+│       ●         │ ← Status dot
+│                 │
+└─────────────────┘
+```
+
+## Configuration
+
+### Auto-Refresh Settings
+1. Select any IP Display button in Stream Deck software
+2. In the property inspector (right panel), configure:
+   - **Auto Refresh Interval**: Choose from dropdown
+     - Manual Only (no auto-refresh)
+     - 1 minute
+     - 5 minutes
+     - 10 minutes (default)
+     - 30 minutes
+     - 1 hour
+
+### Refresh Behavior
+- **Automatic**: IP addresses refresh at your selected interval
+- **Manual**: Press the button anytime for immediate refresh (bypasses cache)
+- **Toggle Mode**: Press to cycle modes AND refresh current display
+- **Settings**: Persist across Stream Deck restarts
 
 ## Requirements
 
@@ -92,16 +145,24 @@ streamdeck dev
 ### Project Structure
 ```
 ├── src/
-│   ├── plugin.ts                 # Main plugin entry point
+│   ├── plugin.ts                      # Main plugin entry point
 │   └── actions/
-│       └── local-ip-display.ts   # IP display action implementation
+│       ├── local-ip-display.ts        # Dual IP display action
+│       ├── local-ip-only-display.ts   # Local IP only action
+│       ├── public-ip-only-display.ts  # Public IP only action
+│       └── ip-toggle-display.ts       # Toggle IP display action
 ├── io.piercefamily.ip-display.sdPlugin/
-│   ├── manifest.json             # Plugin configuration
-│   ├── imgs/                     # Plugin icons and assets
-│   └── bin/                      # Built plugin code
-├── package.json                  # Dependencies and scripts
-├── rollup.config.mjs            # Build configuration
-└── tsconfig.json                # TypeScript configuration
+│   ├── manifest.json                  # Plugin configuration
+│   ├── imgs/                          # Plugin icons and assets
+│   ├── ui/                            # Property inspector HTML files
+│   │   ├── ip-display.html            # Settings UI for single IP actions
+│   │   └── ip-toggle.html             # Settings UI for toggle action
+│   └── bin/                           # Built plugin code
+├── package.json                       # Dependencies and scripts
+├── rollup.config.mjs                 # Build configuration
+├── tsconfig.json                     # TypeScript configuration
+├── CLAUDE.md                         # AI development guidance
+└── README.md                         # This file
 ```
 
 ### Key Technologies
@@ -122,6 +183,9 @@ Public IP is fetched from the [ipify.org](https://www.ipify.org/) API, a free an
 ### Canvas Rendering
 All text is rendered using HTML5 Canvas to ensure pixel-perfect display and prevent text truncation issues that can occur with Stream Deck's built-in text rendering.
 
+### Auto-Refresh System
+The plugin uses configurable timers for automatic IP address updates. Each action type maintains a single efficient timer that refreshes all visible instances. Timer lifecycle is managed through Stream Deck events to prevent memory leaks and ensure clean operation.
+
 ## Troubleshooting
 
 ### Button Shows "No Local IP"
@@ -138,6 +202,17 @@ All text is rendered using HTML5 Canvas to ensure pixel-perfect display and prev
 - Ensure Stream Deck software is version 6.5 or later
 - Check that Node.js 20 is installed on your system
 - Try restarting Stream Deck software
+
+### Auto-Refresh Not Working
+- Check that refresh interval is not set to "Manual Only"
+- Verify Stream Deck software is running (timers pause when software closes)
+- Try manually refreshing once to reset the timer
+- Property inspector settings may take a moment to apply
+
+### Toggle Button Stuck on One Mode
+- Right-click the button and check current mode in property inspector
+- Press the button to cycle to next mode
+- Settings are saved automatically and persist across restarts
 
 ## Contributing
 
