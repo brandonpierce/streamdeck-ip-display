@@ -47,6 +47,21 @@
 					"TitleAlignment": "middle"
 				}
 			]
+		},
+		{
+			"Name": "IP Toggle Display",
+			"UUID": "io.piercefamily.ip-display.toggle",
+			"Icon": "imgs/actions/local-ip/icon",
+			"Tooltip": "Toggles between dual, local, and public IP display modes. Press to cycle.",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/local-ip/key",
+					"TitleAlignment": "middle"
+				}
+			]
 		}
 	],
 	"Category": "IP Display",
