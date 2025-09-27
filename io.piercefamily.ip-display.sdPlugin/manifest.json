@@ -20,10 +20,10 @@
 			]
 		},
 		{
-			"Name": "Local IP",
-			"UUID": "io.piercefamily.ip-display.local-ip",
+			"Name": "Dual IP Display",
+			"UUID": "io.piercefamily.ip-display.dual-ip",
 			"Icon": "imgs/actions/local-ip/icon",
-			"Tooltip": "Displays the current local IP address. Press to refresh.",
+			"Tooltip": "Displays both local and public IP addresses. Press to refresh.",
 			"Controllers": [
 				"Keypad"
 			],

@@ -2,21 +2,23 @@ import { action, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/
 import { networkInterfaces } from "os";
 import { createCanvas } from "canvas";
 
-@action({ UUID: "io.piercefamily.ip-display.local-ip" })
-export class LocalIPDisplay extends SingletonAction<LocalIPSettings> {
-	override async onWillAppear(ev: WillAppearEvent<LocalIPSettings>): Promise<void> {
+@action({ UUID: "io.piercefamily.ip-display.dual-ip" })
+export class IPDisplay extends SingletonAction<IPSettings> {
+	override async onWillAppear(ev: WillAppearEvent<IPSettings>): Promise<void> {
 		const localIP = this.getLocalIPAddress();
-		const imageDataUri = this.generateIPImage(localIP);
+		const publicIP = await this.getPublicIPAddress();
+		const imageDataUri = this.generateIPImage(localIP, publicIP);
 		await ev.action.setImage(imageDataUri);
 	}
 
-	override async onKeyDown(ev: KeyDownEvent<LocalIPSettings>): Promise<void> {
+	override async onKeyDown(ev: KeyDownEvent<IPSettings>): Promise<void> {
 		const localIP = this.getLocalIPAddress();
-		const imageDataUri = this.generateIPImage(localIP);
+		const publicIP = await this.getPublicIPAddress();
+		const imageDataUri = this.generateIPImage(localIP, publicIP);
 		await ev.action.setImage(imageDataUri);
 	}
 
-	private generateIPImage(ipAddress: string | null): string {
+	private generateIPImage(localIP: string | null, publicIP: string | null): string {
 		const canvas = createCanvas(144, 144);
 		const ctx = canvas.getContext('2d');
 
@@ -26,27 +28,38 @@ export class LocalIPDisplay extends SingletonAction<LocalIPSettings> {
 		ctx.shadowOffsetX = 1;
 		ctx.shadowOffsetY = 1;
 
-		if (ipAddress) {
-			// Label text "LOCAL IP"
-			ctx.fillStyle = '#A0A0A0';
-			ctx.font = 'bold 14px Arial';
-			ctx.textAlign = 'center';
-			ctx.textBaseline = 'middle';
-			ctx.fillText('LOCAL IP', 72, 35);
+		ctx.textAlign = 'center';
+		ctx.textBaseline = 'middle';
 
-			// IP address text
-			ctx.fillStyle = '#FFFFFF';
-			ctx.font = 'bold 20px Arial';
-			ctx.fillText(ipAddress, 72, 85);
+		// LOCAL IP Section (Top)
+		ctx.fillStyle = '#A0A0A0';
+		ctx.font = 'bold 12px Arial';
+		ctx.fillText('LOCAL IP', 72, 25);
+
+		ctx.fillStyle = '#FFFFFF';
+		ctx.font = 'bold 16px Arial';
+		ctx.fillText(localIP || 'No Local IP', 72, 45);
+
+		// PUBLIC IP Section (Bottom)
+		ctx.fillStyle = '#A0A0A0';
+		ctx.font = 'bold 12px Arial';
+		ctx.fillText('PUBLIC IP', 72, 85);
+
+		ctx.fillStyle = '#FFFFFF';
+		ctx.font = 'bold 16px Arial';
+		ctx.fillText(publicIP || 'No Public IP', 72, 105);
+
+		// Connection status indicator (small dot)
+		if (localIP && publicIP) {
+			ctx.fillStyle = '#00FF00'; // Green - both connected
+		} else if (localIP || publicIP) {
+			ctx.fillStyle = '#FFAA00'; // Orange - partial connection
 		} else {
-			// Error state - no IP
-			ctx.fillStyle = '#FF6B6B';
-			ctx.font = 'bold 16px Arial';
-			ctx.textAlign = 'center';
-			ctx.textBaseline = 'middle';
-			ctx.fillText('NO IP', 72, 60);
-			ctx.fillText('DETECTED', 72, 84);
+			ctx.fillStyle = '#FF6B6B'; // Red - no connection
 		}
+		ctx.beginPath();
+		ctx.arc(72, 125, 3, 0, 2 * Math.PI);
+		ctx.fill();
 
 		// Convert to base64 data URI
 		const buffer = canvas.toBuffer('image/png');
@@ -71,8 +84,42 @@ export class LocalIPDisplay extends SingletonAction<LocalIPSettings> {
 
 		return null;
 	}
+
+	private publicIPCache: { ip: string | null; timestamp: number } = { ip: null, timestamp: 0 };
+	private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+	private async getPublicIPAddress(): Promise<string | null> {
+		const now = Date.now();
+
+		// Return cached IP if it's still valid
+		if (this.publicIPCache.ip && (now - this.publicIPCache.timestamp) < this.CACHE_DURATION) {
+			return this.publicIPCache.ip;
+		}
+
+		try {
+			const response = await fetch('https://api.ipify.org?format=json', {
+				method: 'GET',
+				headers: { 'User-Agent': 'StreamDeckIPDisplay/1.0' }
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}`);
+			}
+
+			const data = await response.json() as { ip?: string };
+			const publicIP = data.ip || null;
+
+			// Cache the result
+			this.publicIPCache = { ip: publicIP, timestamp: now };
+			return publicIP;
+		} catch (error) {
+			console.warn('Failed to fetch public IP:', error);
+			// Keep old cached IP if available, otherwise return null
+			return this.publicIPCache.ip;
+		}
+	}
 }
 
-type LocalIPSettings = {
+type IPSettings = {
 	refreshInterval?: number;
 };
