@@ -4,22 +4,6 @@
 	"Author": "Brandon Hacks",
 	"Actions": [
 		{
-			"Name": "Counter",
-			"UUID": "io.piercefamily.ip-display.increment",
-			"Icon": "imgs/actions/counter/icon",
-			"Tooltip": "Displays a count, which increments by one on press.",
-			"PropertyInspectorPath": "ui/increment-counter.html",
-			"Controllers": [
-				"Keypad"
-			],
-			"States": [
-				{
-					"Image": "imgs/actions/counter/key",
-					"TitleAlignment": "middle"
-				}
-			]
-		},
-		{
 			"Name": "Dual IP Display",
 			"UUID": "io.piercefamily.ip-display.dual-ip",
 			"Icon": "imgs/actions/local-ip/icon",
