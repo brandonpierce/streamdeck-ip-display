@@ -20,9 +20,11 @@ export class LocalIPDisplay extends SingletonAction<LocalIPSettings> {
 		const canvas = createCanvas(144, 144);
 		const ctx = canvas.getContext('2d');
 
-		// Background
-		ctx.fillStyle = '#2B2D30';
-		ctx.fillRect(0, 0, 144, 144);
+		// Text shadow for readability on transparent background
+		ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+		ctx.shadowBlur = 4;
+		ctx.shadowOffsetX = 1;
+		ctx.shadowOffsetY = 1;
 
 		if (ipAddress) {
 			// Label text "LOCAL IP"
