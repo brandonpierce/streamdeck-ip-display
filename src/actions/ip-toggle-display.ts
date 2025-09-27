@@ -1,36 +1,63 @@
-import { action, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/streamdeck";
+import { action, KeyDownEvent, SingletonAction, WillAppearEvent, WillDisappearEvent, DidReceiveSettingsEvent } from "@elgato/streamdeck";
 import { networkInterfaces } from "os";
 import { createCanvas } from "canvas";
 
 type ToggleSettings = {
 	mode: 'dual' | 'local' | 'public';
+	refreshInterval?: number;
 };
 
 @action({ UUID: "io.piercefamily.ip-display.toggle" })
 export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
+	private refreshTimer: NodeJS.Timeout | null = null;
+	private visibleActions = new Map<string, WillAppearEvent<ToggleSettings>>();
 	override async onWillAppear(ev: WillAppearEvent<ToggleSettings>): Promise<void> {
+		// Store this action instance
+		this.visibleActions.set(ev.action.id, ev);
+
 		// Get current mode from settings, default to 'dual'
 		const { mode = 'dual' } = ev.payload.settings;
 
+		// Display initial content
 		const localIP = this.getLocalIPAddress();
 		const publicIP = await this.getPublicIPAddress();
 		const imageDataUri = this.generateToggleImage(localIP, publicIP, mode);
 		await ev.action.setImage(imageDataUri);
+
+		// Start auto-refresh timer
+		this.startRefreshTimer(ev.payload.settings);
 	}
 
 	override async onKeyDown(ev: KeyDownEvent<ToggleSettings>): Promise<void> {
 		// Get current mode and cycle to next
-		const { mode = 'dual' } = ev.payload.settings;
+		const { mode = 'dual', refreshInterval } = ev.payload.settings;
 		const nextMode = this.getNextMode(mode);
 
-		// Save the new mode
-		await ev.action.setSettings({ mode: nextMode });
+		// Save the new mode (preserve refreshInterval)
+		await ev.action.setSettings({ mode: nextMode, refreshInterval });
 
-		// Update display with new mode
+		// Manual refresh - force cache bypass for public IP
 		const localIP = this.getLocalIPAddress();
+		this.publicIPCache = { ip: null, timestamp: 0 }; // Clear cache for fresh fetch
 		const publicIP = await this.getPublicIPAddress();
 		const imageDataUri = this.generateToggleImage(localIP, publicIP, nextMode);
 		await ev.action.setImage(imageDataUri);
+	}
+
+	override onWillDisappear(ev: WillDisappearEvent<ToggleSettings>): void {
+		// Remove this action instance
+		this.visibleActions.delete(ev.action.id);
+
+		// If no visible actions remain, stop the timer
+		if (this.visibleActions.size === 0 && this.refreshTimer) {
+			clearInterval(this.refreshTimer);
+			this.refreshTimer = null;
+		}
+	}
+
+	override onDidReceiveSettings(ev: DidReceiveSettingsEvent<ToggleSettings>): void {
+		// Restart timer with new settings
+		this.startRefreshTimer(ev.payload.settings);
 	}
 
 	private getNextMode(currentMode: string): 'dual' | 'local' | 'public' {
@@ -168,6 +195,39 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 			console.warn('Failed to fetch public IP:', error);
 			// Keep old cached IP if available, otherwise return null
 			return this.publicIPCache.ip;
+		}
+	}
+
+	private startRefreshTimer(settings: ToggleSettings): void {
+		// Clear existing timer
+		if (this.refreshTimer) {
+			clearInterval(this.refreshTimer);
+			this.refreshTimer = null;
+		}
+
+		// Get refresh interval (default to 10 minutes)
+		const { refreshInterval = 600000 } = settings;
+
+		// Only start timer if interval > 0 (0 means manual only)
+		if (refreshInterval > 0) {
+			this.refreshTimer = setInterval(async () => {
+				await this.refreshAllVisibleActions();
+			}, refreshInterval);
+		}
+	}
+
+	private async refreshAllVisibleActions(): Promise<void> {
+		// Refresh all visible action instances
+		for (const actionEvent of this.visibleActions.values()) {
+			try {
+				const { mode = 'dual' } = actionEvent.payload.settings;
+				const localIP = this.getLocalIPAddress();
+				const publicIP = await this.getPublicIPAddress();
+				const imageDataUri = this.generateToggleImage(localIP, publicIP, mode);
+				await actionEvent.action.setImage(imageDataUri);
+			} catch (error) {
+				console.warn('Failed to refresh toggle IP display:', error);
+			}
 		}
 	}
 }

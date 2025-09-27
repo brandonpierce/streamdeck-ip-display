@@ -8,6 +8,7 @@
 			"UUID": "io.piercefamily.ip-display.dual-ip",
 			"Icon": "imgs/actions/local-ip/icon",
 			"Tooltip": "Displays both local and public IP addresses. Press to refresh.",
+			"PropertyInspectorPath": "ui/ip-display.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -23,6 +24,7 @@
 			"UUID": "io.piercefamily.ip-display.local-ip",
 			"Icon": "imgs/actions/local-ip/icon",
 			"Tooltip": "Displays your local network IP address. Press to refresh.",
+			"PropertyInspectorPath": "ui/ip-display.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -38,6 +40,7 @@
 			"UUID": "io.piercefamily.ip-display.public-ip",
 			"Icon": "imgs/actions/local-ip/icon",
 			"Tooltip": "Displays your public internet IP address. Press to refresh.",
+			"PropertyInspectorPath": "ui/ip-display.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -53,6 +56,7 @@
 			"UUID": "io.piercefamily.ip-display.toggle",
 			"Icon": "imgs/actions/local-ip/icon",
 			"Tooltip": "Toggles between dual, local, and public IP display modes. Press to cycle.",
+			"PropertyInspectorPath": "ui/ip-toggle.html",
 			"Controllers": [
 				"Keypad"
 			],

@@ -1,19 +1,45 @@
-import { action, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/streamdeck";
+import { action, KeyDownEvent, SingletonAction, WillAppearEvent, WillDisappearEvent, DidReceiveSettingsEvent } from "@elgato/streamdeck";
 import { networkInterfaces } from "os";
 import { createCanvas } from "canvas";
 
 @action({ UUID: "io.piercefamily.ip-display.local-ip" })
 export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
+	private refreshTimer: NodeJS.Timeout | null = null;
+	private visibleActions = new Map<string, WillAppearEvent<IPSettings>>();
 	override async onWillAppear(ev: WillAppearEvent<IPSettings>): Promise<void> {
+		// Store this action instance
+		this.visibleActions.set(ev.action.id, ev);
+
+		// Display initial content
+		const localIP = this.getLocalIPAddress();
+		const imageDataUri = this.generateLocalIPImage(localIP);
+		await ev.action.setImage(imageDataUri);
+
+		// Start auto-refresh timer
+		this.startRefreshTimer(ev.payload.settings);
+	}
+
+	override async onKeyDown(ev: KeyDownEvent<IPSettings>): Promise<void> {
+		// Manual refresh - get fresh local IP
 		const localIP = this.getLocalIPAddress();
 		const imageDataUri = this.generateLocalIPImage(localIP);
 		await ev.action.setImage(imageDataUri);
 	}
 
-	override async onKeyDown(ev: KeyDownEvent<IPSettings>): Promise<void> {
-		const localIP = this.getLocalIPAddress();
-		const imageDataUri = this.generateLocalIPImage(localIP);
-		await ev.action.setImage(imageDataUri);
+	override onWillDisappear(ev: WillDisappearEvent<IPSettings>): void {
+		// Remove this action instance
+		this.visibleActions.delete(ev.action.id);
+
+		// If no visible actions remain, stop the timer
+		if (this.visibleActions.size === 0 && this.refreshTimer) {
+			clearInterval(this.refreshTimer);
+			this.refreshTimer = null;
+		}
+	}
+
+	override onDidReceiveSettings(ev: DidReceiveSettingsEvent<IPSettings>): void {
+		// Restart timer with new settings
+		this.startRefreshTimer(ev.payload.settings);
 	}
 
 	private generateLocalIPImage(localIP: string | null): string {
@@ -66,6 +92,37 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 		}
 
 		return null;
+	}
+
+	private startRefreshTimer(settings: IPSettings): void {
+		// Clear existing timer
+		if (this.refreshTimer) {
+			clearInterval(this.refreshTimer);
+			this.refreshTimer = null;
+		}
+
+		// Get refresh interval (default to 10 minutes)
+		const { refreshInterval = 600000 } = settings;
+
+		// Only start timer if interval > 0 (0 means manual only)
+		if (refreshInterval > 0) {
+			this.refreshTimer = setInterval(async () => {
+				await this.refreshAllVisibleActions();
+			}, refreshInterval);
+		}
+	}
+
+	private async refreshAllVisibleActions(): Promise<void> {
+		// Refresh all visible action instances
+		for (const actionEvent of this.visibleActions.values()) {
+			try {
+				const localIP = this.getLocalIPAddress();
+				const imageDataUri = this.generateLocalIPImage(localIP);
+				await actionEvent.action.setImage(imageDataUri);
+			} catch (error) {
+				console.warn('Failed to refresh local IP display:', error);
+			}
+		}
 	}
 }
 
