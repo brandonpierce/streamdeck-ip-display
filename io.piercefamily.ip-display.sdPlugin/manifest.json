@@ -17,6 +17,36 @@
 					"TitleAlignment": "middle"
 				}
 			]
+		},
+		{
+			"Name": "Local IP Display",
+			"UUID": "io.piercefamily.ip-display.local-ip",
+			"Icon": "imgs/actions/local-ip/icon",
+			"Tooltip": "Displays your local network IP address. Press to refresh.",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/local-ip/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Public IP Display",
+			"UUID": "io.piercefamily.ip-display.public-ip",
+			"Icon": "imgs/actions/local-ip/icon",
+			"Tooltip": "Displays your public internet IP address. Press to refresh.",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/local-ip/key",
+					"TitleAlignment": "middle"
+				}
+			]
 		}
 	],
 	"Category": "IP Display",
