@@ -83,22 +83,22 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 		ctx.textBaseline = 'middle';
 
 		if (mode === 'dual') {
-			// Dual IP display (similar to original)
+			// Dual IP display (matches Dual IP Display layout)
 			ctx.fillStyle = '#A0A0A0';
 			ctx.font = 'bold 12px Arial';
-			ctx.fillText('LOCAL IP', 72, 35);
+			ctx.fillText('LOCAL IP', 72, 25);
 
 			ctx.fillStyle = '#FFFFFF';
-			ctx.font = 'bold 14px Arial';
-			ctx.fillText(localIP || 'No Local IP', 72, 52);
+			ctx.font = 'bold 16px Arial';
+			ctx.fillText(localIP || 'No Local IP', 72, 45);
 
 			ctx.fillStyle = '#A0A0A0';
 			ctx.font = 'bold 12px Arial';
-			ctx.fillText('PUBLIC IP', 72, 80);
+			ctx.fillText('PUBLIC IP', 72, 85);
 
 			ctx.fillStyle = '#FFFFFF';
-			ctx.font = 'bold 14px Arial';
-			ctx.fillText(publicIP || 'No Public IP', 72, 97);
+			ctx.font = 'bold 16px Arial';
+			ctx.fillText(publicIP || 'No Public IP', 72, 105);
 
 			// Connection status indicator
 			if (localIP && publicIP) {
@@ -136,7 +136,7 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 
 		// Draw status indicator dot
 		ctx.beginPath();
-		const dotY = mode === 'dual' ? 115 : 105;
+		const dotY = mode === 'dual' ? 125 : 105;
 		ctx.arc(72, dotY, mode === 'dual' ? 3 : 4, 0, 2 * Math.PI);
 		ctx.fill();
 
