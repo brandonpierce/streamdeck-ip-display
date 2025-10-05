@@ -14,11 +14,13 @@
         "@tsconfig/node20": "^20.1.2",
         "@types/node": "~20.15.0",
         "rollup": "^4.0.2",
+        "rollup-plugin-copy": "^3.5.0",
         "tslib": "^2.6.2",
         "typescript": "^5.2.2"
     },
     "dependencies": {
         "@elgato/streamdeck": "^1.0.0",
-        "canvas": "^3.2.0"
+        "canvas": "^3.2.0",
+        "clipboardy": "^5.0.0"
     }
 }

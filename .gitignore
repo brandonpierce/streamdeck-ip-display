@@ -4,6 +4,7 @@ node_modules/
 # Stream Deck files
 *.sdPlugin/bin
 *.sdPlugin/logs
+*.sdPlugin/fallbacks
 
 # Claude Code local settings
 .claude/

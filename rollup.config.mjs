@@ -3,6 +3,7 @@ import json from "@rollup/plugin-json";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import terser from "@rollup/plugin-terser";
 import typescript from "@rollup/plugin-typescript";
+import copy from "rollup-plugin-copy";
 import path from "node:path";
 import url from "node:url";
 
@@ -31,6 +32,14 @@ const config = {
 		},
 		typescript({
 			mapRoot: isWatching ? "./" : undefined
+		}),
+		copy({
+			targets: [
+				{
+					src: "node_modules/clipboardy/fallbacks",
+					dest: sdPlugin
+				}
+			]
 		}),
 		json(),
 		nodeResolve({
