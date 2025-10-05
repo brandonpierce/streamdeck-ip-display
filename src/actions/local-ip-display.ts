@@ -231,14 +231,7 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 			await clipboard.write(textToCopy);
 
 			// Show success feedback
-			const feedbackImage = this.generateCopyFeedbackImage(true);
-			await ev.action.setImage(feedbackImage);
-
-			// Restore normal display after 1 second
-			setTimeout(async () => {
-				const imageDataUri = this.generateIPImage(localIP, publicIP);
-				await ev.action.setImage(imageDataUri);
-			}, 1000);
+			await ev.action.showOk();
 		} catch (error) {
 			streamDeck.logger.error('=== CLIPBOARD COPY FAILED ===');
 			streamDeck.logger.error('Error object:', error);
@@ -250,51 +243,10 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 			streamDeck.logger.error('===========================');
 
 			// Show failure feedback
-			const feedbackImage = this.generateCopyFeedbackImage(false);
-			await ev.action.setImage(feedbackImage);
-
-			// Restore normal display after 1 second
-			setTimeout(async () => {
-				const imageDataUri = this.generateIPImage(localIP, publicIP);
-				await ev.action.setImage(imageDataUri);
-			}, 1000);
+			await ev.action.showAlert();
 		}
 	}
 
-	private generateCopyFeedbackImage(success: boolean): string {
-		const canvas = createCanvas(144, 144);
-		const ctx = canvas.getContext('2d');
-
-		ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-		ctx.shadowBlur = 4;
-		ctx.shadowOffsetX = 1;
-		ctx.shadowOffsetY = 1;
-
-		ctx.textAlign = 'center';
-		ctx.textBaseline = 'middle';
-
-		if (success) {
-			ctx.fillStyle = '#00FF00';
-			ctx.font = 'bold 48px Arial';
-			ctx.fillText('✓', 72, 60);
-
-			ctx.fillStyle = '#FFFFFF';
-			ctx.font = 'bold 16px Arial';
-			ctx.fillText('COPIED', 72, 100);
-		} else {
-			ctx.fillStyle = '#FF6B6B';
-			ctx.font = 'bold 48px Arial';
-			ctx.fillText('✗', 72, 60);
-
-			ctx.fillStyle = '#FFFFFF';
-			ctx.font = 'bold 16px Arial';
-			ctx.fillText('FAILED', 72, 100);
-		}
-
-		const buffer = canvas.toBuffer('image/png');
-		const base64 = buffer.toString('base64');
-		return `data:image/png;base64,${base64}`;
-	}
 }
 
 type IPSettings = {
