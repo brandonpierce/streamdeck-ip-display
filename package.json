@@ -1,7 +1,8 @@
 {
     "scripts": {
         "build": "rollup -c",
-        "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart io.piercefamily.ip-display\""
+        "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart io.piercefamily.ip-display\"",
+        "generate-icons": "node scripts/generate-icons.js"
     },
     "type": "module",
     "devDependencies": {
