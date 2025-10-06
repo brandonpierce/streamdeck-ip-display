@@ -6,6 +6,8 @@ import clipboard from "clipboardy";
 type ToggleSettings = {
 	mode: 'dual' | 'local' | 'public';
 	refreshInterval?: number;
+	customLocalLabel?: string;
+	customPublicLabel?: string;
 };
 
 @action({ UUID: "io.piercefamily.ip-display.toggle" })
@@ -24,7 +26,7 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 		// Display initial content
 		const localIP = this.getLocalIPAddress();
 		const publicIP = await this.getPublicIPAddress();
-		const imageDataUri = this.generateToggleImage(localIP, publicIP, mode);
+		const imageDataUri = this.generateToggleImage(localIP, publicIP, mode, ev.payload.settings);
 		await ev.action.setImage(imageDataUri);
 
 		// Start auto-refresh timer
@@ -56,17 +58,17 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 
 		if (duration < this.LONG_PRESS_THRESHOLD) {
 			// Short press - toggle mode
-			const { mode = 'dual', refreshInterval } = ev.payload.settings;
+			const { mode = 'dual' } = ev.payload.settings;
 			const nextMode = this.getNextMode(mode);
 
-			// Save the new mode (preserve refreshInterval)
-			await ev.action.setSettings({ mode: nextMode, refreshInterval });
+			// Save the new mode (preserve all other settings)
+			await ev.action.setSettings({ ...ev.payload.settings, mode: nextMode });
 
 			// Manual refresh - force cache bypass for public IP
 			const localIP = this.getLocalIPAddress();
 			this.publicIPCache = { ip: null, timestamp: 0 }; // Clear cache for fresh fetch
 			const publicIP = await this.getPublicIPAddress();
-			const imageDataUri = this.generateToggleImage(localIP, publicIP, nextMode);
+			const imageDataUri = this.generateToggleImage(localIP, publicIP, nextMode, ev.payload.settings);
 			await ev.action.setImage(imageDataUri);
 		}
 		// Long press already handled in setTimeout
@@ -92,9 +94,16 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 		}
 	}
 
-	override onDidReceiveSettings(ev: DidReceiveSettingsEvent<ToggleSettings>): void {
+	override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<ToggleSettings>): Promise<void> {
 		// Restart timer with new settings
 		this.startRefreshTimer(ev.payload.settings);
+
+		// Refresh display with new settings
+		const { mode = 'dual' } = ev.payload.settings;
+		const localIP = this.getLocalIPAddress();
+		const publicIP = await this.getPublicIPAddress();
+		const imageDataUri = this.generateToggleImage(localIP, publicIP, mode, ev.payload.settings);
+		await ev.action.setImage(imageDataUri);
 	}
 
 	private getNextMode(currentMode: string): 'dual' | 'local' | 'public' {
@@ -106,7 +115,7 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 		}
 	}
 
-	private generateToggleImage(localIP: string | null, publicIP: string | null, mode: 'dual' | 'local' | 'public'): string {
+	private generateToggleImage(localIP: string | null, publicIP: string | null, mode: 'dual' | 'local' | 'public', settings: ToggleSettings): string {
 		const canvas = createCanvas(144, 144);
 		const ctx = canvas.getContext('2d');
 
@@ -123,7 +132,8 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 			// Dual IP display (matches Dual IP Display layout)
 			ctx.fillStyle = '#A0A0A0';
 			ctx.font = 'bold 12px Arial';
-			ctx.fillText('LOCAL IP', 72, 25);
+			const localLabel = settings.customLocalLabel || 'LOCAL IP';
+			ctx.fillText(localLabel, 72, 25);
 
 			ctx.fillStyle = '#FFFFFF';
 			ctx.font = 'bold 16px Arial';
@@ -131,7 +141,8 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 
 			ctx.fillStyle = '#A0A0A0';
 			ctx.font = 'bold 12px Arial';
-			ctx.fillText('PUBLIC IP', 72, 85);
+			const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
+			ctx.fillText(publicLabel, 72, 85);
 
 			ctx.fillStyle = '#FFFFFF';
 			ctx.font = 'bold 16px Arial';
@@ -149,7 +160,8 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 			// Local IP only display
 			ctx.fillStyle = '#A0A0A0';
 			ctx.font = 'bold 14px Arial';
-			ctx.fillText('LOCAL IP', 72, 55);
+			const localLabel = settings.customLocalLabel || 'LOCAL IP';
+			ctx.fillText(localLabel, 72, 55);
 
 			ctx.fillStyle = '#FFFFFF';
 			ctx.font = 'bold 18px Arial';
@@ -161,7 +173,8 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 			// Public IP only display
 			ctx.fillStyle = '#A0A0A0';
 			ctx.font = 'bold 14px Arial';
-			ctx.fillText('PUBLIC IP', 72, 55);
+			const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
+			ctx.fillText(publicLabel, 72, 55);
 
 			ctx.fillStyle = '#FFFFFF';
 			ctx.font = 'bold 18px Arial';
@@ -260,7 +273,7 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				const { mode = 'dual' } = actionEvent.payload.settings;
 				const localIP = this.getLocalIPAddress();
 				const publicIP = await this.getPublicIPAddress();
-				const imageDataUri = this.generateToggleImage(localIP, publicIP, mode);
+				const imageDataUri = this.generateToggleImage(localIP, publicIP, mode, actionEvent.payload.settings);
 				await actionEvent.action.setImage(imageDataUri);
 			} catch (error) {
 				streamDeck.logger.warn('Failed to refresh toggle IP display:', error);

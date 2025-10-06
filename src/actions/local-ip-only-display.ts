@@ -15,7 +15,7 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 
 		// Display initial content
 		const localIP = this.getLocalIPAddress();
-		const imageDataUri = this.generateLocalIPImage(localIP);
+		const imageDataUri = this.generateLocalIPImage(localIP, ev.payload.settings);
 		await ev.action.setImage(imageDataUri);
 
 		// Start auto-refresh timer
@@ -46,7 +46,7 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 		if (duration < this.LONG_PRESS_THRESHOLD) {
 			// Short press - refresh display
 			const localIP = this.getLocalIPAddress();
-			const imageDataUri = this.generateLocalIPImage(localIP);
+			const imageDataUri = this.generateLocalIPImage(localIP, ev.payload.settings);
 			await ev.action.setImage(imageDataUri);
 		}
 		// Long press already handled in setTimeout
@@ -72,12 +72,17 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 		}
 	}
 
-	override onDidReceiveSettings(ev: DidReceiveSettingsEvent<IPSettings>): void {
+	override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<IPSettings>): Promise<void> {
 		// Restart timer with new settings
 		this.startRefreshTimer(ev.payload.settings);
+
+		// Refresh display with new settings
+		const localIP = this.getLocalIPAddress();
+		const imageDataUri = this.generateLocalIPImage(localIP, ev.payload.settings);
+		await ev.action.setImage(imageDataUri);
 	}
 
-	private generateLocalIPImage(localIP: string | null): string {
+	private generateLocalIPImage(localIP: string | null, settings: IPSettings): string {
 		const canvas = createCanvas(144, 144);
 		const ctx = canvas.getContext('2d');
 
@@ -93,7 +98,8 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 		// LOCAL IP Section (Centered)
 		ctx.fillStyle = '#A0A0A0';
 		ctx.font = 'bold 14px Arial';
-		ctx.fillText('LOCAL IP', 72, 50);
+		const label = settings.customLabel || 'LOCAL IP';
+		ctx.fillText(label, 72, 50);
 
 		ctx.fillStyle = '#FFFFFF';
 		ctx.font = 'bold 18px Arial';
@@ -152,7 +158,7 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 		for (const actionEvent of this.visibleActions.values()) {
 			try {
 				const localIP = this.getLocalIPAddress();
-				const imageDataUri = this.generateLocalIPImage(localIP);
+				const imageDataUri = this.generateLocalIPImage(localIP, actionEvent.payload.settings);
 				await actionEvent.action.setImage(imageDataUri);
 			} catch (error) {
 				streamDeck.logger.warn('Failed to refresh local IP display:', error);
@@ -185,4 +191,5 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 
 type IPSettings = {
 	refreshInterval?: number;
+	customLabel?: string;
 };

@@ -14,7 +14,7 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 
 		// Display initial content
 		const publicIP = await this.getPublicIPAddress();
-		const imageDataUri = this.generatePublicIPImage(publicIP);
+		const imageDataUri = this.generatePublicIPImage(publicIP, ev.payload.settings);
 		await ev.action.setImage(imageDataUri);
 
 		// Start auto-refresh timer
@@ -46,7 +46,7 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 			// Short press - refresh display with cache bypass
 			this.publicIPCache = { ip: null, timestamp: 0 }; // Clear cache for fresh fetch
 			const publicIP = await this.getPublicIPAddress();
-			const imageDataUri = this.generatePublicIPImage(publicIP);
+			const imageDataUri = this.generatePublicIPImage(publicIP, ev.payload.settings);
 			await ev.action.setImage(imageDataUri);
 		}
 		// Long press already handled in setTimeout
@@ -72,12 +72,17 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 		}
 	}
 
-	override onDidReceiveSettings(ev: DidReceiveSettingsEvent<IPSettings>): void {
+	override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<IPSettings>): Promise<void> {
 		// Restart timer with new settings
 		this.startRefreshTimer(ev.payload.settings);
+
+		// Refresh display with new settings
+		const publicIP = await this.getPublicIPAddress();
+		const imageDataUri = this.generatePublicIPImage(publicIP, ev.payload.settings);
+		await ev.action.setImage(imageDataUri);
 	}
 
-	private generatePublicIPImage(publicIP: string | null): string {
+	private generatePublicIPImage(publicIP: string | null, settings: IPSettings): string {
 		const canvas = createCanvas(144, 144);
 		const ctx = canvas.getContext('2d');
 
@@ -93,7 +98,8 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 		// PUBLIC IP Section (Centered)
 		ctx.fillStyle = '#A0A0A0';
 		ctx.font = 'bold 14px Arial';
-		ctx.fillText('PUBLIC IP', 72, 50);
+		const label = settings.customLabel || 'PUBLIC IP';
+		ctx.fillText(label, 72, 50);
 
 		ctx.fillStyle = '#FFFFFF';
 		ctx.font = 'bold 18px Arial';
@@ -168,7 +174,7 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 		for (const actionEvent of this.visibleActions.values()) {
 			try {
 				const publicIP = await this.getPublicIPAddress();
-				const imageDataUri = this.generatePublicIPImage(publicIP);
+				const imageDataUri = this.generatePublicIPImage(publicIP, actionEvent.payload.settings);
 				await actionEvent.action.setImage(imageDataUri);
 			} catch (error) {
 				streamDeck.logger.warn('Failed to refresh public IP display:', error);
@@ -201,4 +207,5 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 
 type IPSettings = {
 	refreshInterval?: number;
+	customLabel?: string;
 };
