@@ -1,27 +1,40 @@
 # Feature Ideas
 
-This document contains potential feature enhancements for the Stream Deck IP Display plugin.
+This document tracks potential feature enhancements for the Stream Deck IP Display plugin.
+
+## ✅ Implemented Features
+
+### 1. Copy to Clipboard
+**Status**: ✅ Implemented (v1.1.0 - 2025-01-06)
+Long-press (800ms) any IP display button to copy current IP address(es) to clipboard. Shows success/failure feedback using native Stream Deck icons.
+
+### 2. Network Interface Selection
+**Status**: ✅ Implemented (v1.1.0 - 2025-01-06)
+Property inspector dropdown allows users to choose specific network adapter (WiFi vs Ethernet vs VPN) with auto-detect as default. Uses SDPI Components datasource pattern for dynamic population.
+
+### 3. Custom Label Text
+**Status**: ✅ Implemented (v1.1.0 - 2025-01-06)
+Users can rename "LOCAL IP" / "PUBLIC IP" labels (max 12 characters) via property inspector. Supports different labels for each action instance.
+
+### 4. Multi-line IP Display Mode
+**Status**: ✅ Implemented (v1.1.0 - 2025-01-06)
+Toggle checkbox in property inspector to split IP addresses across two lines with larger fonts for improved readability. Dynamically adjusts layout to prevent edge clipping.
+
+### 5. Custom Symbolic Icons
+**Status**: ✅ Implemented (v1.1.0 - 2025-01-06)
+Professional custom icons for plugin and all four action types with consistent design language.
 
 ## High-Value, Easy Additions
 
-### 1. Copy to Clipboard
-Long-press to copy current IP(s) to clipboard for easy sharing/pasting.
-
-### 2. Network Interface Selection
-Currently picks first non-internal interface; let users choose specific adapter (WiFi vs Ethernet vs VPN) via property inspector dropdown.
-
-### 3. WiFi Network Name (SSID)
+### 1. WiFi Network Name (SSID)
 Display network name alongside local IP, especially useful when switching between networks.
 
-### 4. Better Error States
+### 2. Better Error States
 More specific visual indicators for different failures:
 - No internet connection
 - API timeout
 - No network adapter
 - Rate limit exceeded
-
-### 5. Custom Label Text
-Let users rename "LOCAL IP" / "PUBLIC IP" labels (e.g., "LAN", "WAN", "Server IP").
 
 ## Medium-Value, Moderate Complexity
 
@@ -54,8 +67,35 @@ Track IP changes over time, export to file.
 ### 14. Custom API Endpoint
 Let users specify their own public IP service (privacy/reliability).
 
-## Recommended Starting Points
+## Recommended Next Steps
 
-The most impactful features to implement first would be:
-1. **Copy to Clipboard** - High user value, straightforward implementation
-2. **Network Interface Selection** - Solves common multi-adapter scenarios
+With the core features now implemented, the most impactful features to add next would be:
+
+### Near-term (High Value)
+1. **WiFi Network Name (SSID)** - Helps users identify which network they're on
+2. **Better Error States** - More granular feedback for troubleshooting
+3. **IP Change Detection** - Visual alerts when IP addresses change
+
+### Mid-term (Nice to Have)
+4. **IPv6 Support** - Growing relevance as adoption increases
+5. **VPN Status Indicator** - Useful for privacy-conscious users
+6. **QR Code Display Mode** - Easy mobile device connection sharing
+
+### Long-term (Advanced)
+7. **Connection Quality/Ping** - Network performance monitoring
+8. **Custom API Endpoint** - Privacy and reliability options
+9. **IP History/Log** - Track changes over time
+
+## New Ideas
+
+### Export/Import Settings
+Allow users to export plugin configuration and import on other machines or for backup purposes.
+
+### Keyboard Shortcuts
+Quick keyboard combinations for instant clipboard copy without opening Stream Deck software.
+
+### API Health Monitoring
+Display status indicator if the public IP API service is down or slow, with automatic fallback to alternative services.
+
+### Compact Display Mode
+Ultra-minimalist view showing only IP numbers without labels for users who want maximum screen real estate.

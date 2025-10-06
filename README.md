@@ -23,11 +23,22 @@ A comprehensive Stream Deck plugin for IP address monitoring with four button ty
 - **Transparent Background**: Clean design that works with any Stream Deck theme
 - **High-Quality Rendering**: Canvas-based text rendering prevents truncation issues
 - **Optimized Layouts**: Single IP displays use larger fonts and centered positioning
+- **Multi-line Display Mode**: Toggle to split IPs across two lines with larger fonts for better readability
+
+### User Customization
+- **Custom Label Text**: Personalize "LOCAL IP" and "PUBLIC IP" labels (max 12 characters)
+  - Examples: "LAN", "WAN", "Server IP", "VPN", "Office", "Home"
+- **Network Interface Selection**: Choose specific network adapter (WiFi, Ethernet, VPN)
+  - Auto-detect picks first available (default)
+  - Override to select specific adapter for multi-network setups
+- **Clipboard Copy**: Long-press (800ms) any button to copy IP address(es) to clipboard
+  - Visual feedback with success/failure indicators
+  - Dual IP buttons copy both addresses with labels
 
 ### Smart Features
-- **Settings Persistence**: Auto-refresh preferences saved across Stream Deck restarts
+- **Settings Persistence**: All preferences saved across Stream Deck restarts
 - **API Rate Limiting**: Public IP cached for 5 minutes to prevent excessive API calls
-- **Multiple Instance Support**: Each button can have different refresh settings
+- **Multiple Instance Support**: Each button can have different settings independently
 
 ## Installation
 
@@ -84,22 +95,55 @@ A comprehensive Stream Deck plugin for IP address monitoring with four button ty
 
 ## Configuration
 
-### Auto-Refresh Settings
-1. Select any IP Display button in Stream Deck software
-2. In the property inspector (right panel), configure:
-   - **Auto Refresh Interval**: Choose from dropdown
-     - Manual Only (no auto-refresh)
-     - 1 minute
-     - 5 minutes
-     - 10 minutes (default)
-     - 30 minutes
-     - 1 hour
+Select any IP Display button in Stream Deck software to access the property inspector (right panel).
 
-### Refresh Behavior
-- **Automatic**: IP addresses refresh at your selected interval
-- **Manual**: Press the button anytime for immediate refresh (bypasses cache)
-- **Toggle Mode**: Press to cycle modes AND refresh current display
-- **Settings**: Persist across Stream Deck restarts
+### Available Settings
+
+#### Custom Labels (Dual IP and Toggle only)
+- **Local IP Label**: Rename "LOCAL IP" (max 12 characters)
+- **Public IP Label**: Rename "PUBLIC IP" (max 12 characters)
+- Leave blank to use defaults
+- Examples: "LAN", "WAN", "Server", "VPN", "Office"
+
+#### Custom Label (Single IP actions)
+- **Custom Label**: Rename "LOCAL IP" or "PUBLIC IP" (max 12 characters)
+- Leave blank to use default
+- Examples: "My IP", "Server", "Home", "Work"
+
+#### Network Interface
+- **Auto-detect (default)**: Automatically selects first available interface
+- **Specific Interface**: Choose from dropdown (WiFi, Ethernet, VPN, etc.)
+- Dropdown populates dynamically based on your system's network adapters
+- Only interfaces with active IPv4 addresses are shown
+
+#### IP Display Format
+- **Single-line (default)**: Traditional compact layout
+- **Multi-line**: Split IP addresses across two lines with larger fonts
+- Improves readability for longer IP addresses
+- Automatically adjusts spacing to prevent edge clipping
+
+#### Auto Refresh Interval
+- **Manual Only**: No automatic refresh (refresh only on button press)
+- **1 minute**: Fast refresh for dynamic environments
+- **5 minutes**: Balanced refresh rate
+- **10 minutes (default)**: Recommended for most users
+- **30 minutes**: Low-frequency monitoring
+- **1 hour**: Minimal refresh for stable networks
+
+### Button Interactions
+
+#### Short Press (< 800ms)
+- **Single/Dual IP**: Refreshes IP addresses (bypasses cache)
+- **Toggle IP**: Cycles to next mode (Dual → Local → Public → Dual) and refreshes
+
+#### Long Press (≥ 800ms)
+- **All Buttons**: Copies IP address(es) to clipboard
+  - Single IP: Copies just the IP address
+  - Dual IP: Copies both with labels: `Local: 192.168.1.100\nPublic: 203.0.113.45`
+  - Visual feedback: ✓ success or ✗ failure
+
+### Settings Persistence
+All configuration options persist across Stream Deck restarts automatically.
 
 ## Requirements
 
@@ -214,6 +258,30 @@ The plugin uses configurable timers for automatic IP address updates. Each actio
 - Press the button to cycle to next mode
 - Settings are saved automatically and persist across restarts
 
+### Clipboard Copy Not Working
+- Ensure press duration exceeds 800ms for long-press detection
+- Check system clipboard permissions (some apps may block clipboard access)
+- Try a short press first to ensure button is responsive
+- Watch for visual feedback (✓ or ✗) to confirm copy attempt
+
+### Network Interface Dropdown Empty
+- Ensure you have at least one active network connection
+- Only interfaces with IPv4 addresses appear in dropdown
+- Disconnect and reconnect to network, then open property inspector again
+- Try "Auto-detect (default)" if specific interface not showing
+
+### Multi-line Display Text Cut Off
+- Font sizes auto-adjust to prevent edge clipping
+- If IPs still appear cut off, report the specific IP format (issue)
+- Try single-line mode as alternative
+- Custom labels over 12 characters will be truncated
+
+### Custom Labels Not Showing
+- Check that you entered text in the property inspector field
+- Labels update on next refresh - press button to force update
+- Blank fields reset to default "LOCAL IP" / "PUBLIC IP"
+- Maximum 12 characters - longer text will be cut off
+
 ## Contributing
 
 1. Fork the repository
@@ -229,5 +297,6 @@ This project is open source. Please check the repository for license information
 ## Acknowledgments
 
 - Built with the [Elgato Stream Deck SDK](https://github.com/elgatosf/streamdeck)
+- Property inspector UI powered by [SDPI Components](https://sdpi-components.dev/)
 - Public IP detection powered by [ipify.org](https://www.ipify.org/)
 - Canvas rendering for high-quality text display

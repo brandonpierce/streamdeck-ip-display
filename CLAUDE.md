@@ -47,8 +47,31 @@ export class IPDisplay extends SingletonAction<IPSettings>
 
 **IP Address Handling**:
 - Local IP: Uses `os.networkInterfaces()` to find non-internal IPv4 addresses
+  - Supports user-selected network interface via dropdown (auto-detect default)
+  - Settings persist with `networkInterface?: string` field
 - Public IP: Fetches from ipify.org API with 5-minute caching to avoid rate limits
 - Status indicator: Color-coded dot (green/orange/red) based on connection status
+
+**Clipboard Copy Pattern**:
+- Long-press detection using 800ms threshold (`LONG_PRESS_THRESHOLD`)
+- `onKeyDown`: Starts timer, stores press timestamp and IPs
+- `onKeyUp`: Checks duration, executes copy if ≥ threshold, else refreshes
+- Uses `clipboardy` library for cross-platform clipboard access
+- Visual feedback via `showOk()` (success) or `showAlert()` (failure)
+- Dual IP format: `Local: <ip>\nPublic: <ip>`
+
+**Custom Label Support**:
+- Settings fields: `customLabel`, `customLocalLabel`, `customPublicLabel`
+- Max 12 characters to fit button layout
+- Falls back to defaults ("LOCAL IP", "PUBLIC IP") when blank
+- Renders using Canvas with dynamic font sizing
+
+**Multi-line Display Mode**:
+- Toggle via `multilineIP?: boolean` setting
+- Splits IP addresses into two lines: `192.168.` / `1.100`
+- Larger fonts (20px vs 16px for IPs, 13px vs 14px for labels)
+- Different vertical spacing calculations for single vs multi-line
+- `splitIP()` utility function handles formatting
 
 ### Build Process
 
@@ -78,10 +101,56 @@ The build uses Rollup with specific Stream Deck requirements:
 - Settings-driven: 0 = Manual Only, >0 = auto-refresh interval in milliseconds
 
 **Property Inspector Integration**:
-- HTML-based settings UI using sdpi-components library
+- HTML-based settings UI using SDPI Components v4 library
 - Dropdown selection for refresh intervals (Manual Only, 1min-1hr)
 - Settings persistence via Stream Deck SDK
 - Separate UI files for different action types
+
+**SDPI Components Datasource Pattern** (Network Interface Dropdown):
+```html
+<sdpi-select setting="networkInterface" datasource="getNetworkInterfaces" loading="Loading interfaces...">
+  <option value="">Auto-detect (default)</option>
+</sdpi-select>
+```
+
+Plugin responds to datasource requests in `onSendToPlugin`:
+```typescript
+override onSendToPlugin(ev: SendToPluginEvent<any, Settings>): void {
+  const payload = ev.payload as { event?: string };
+
+  if (payload.event === 'getNetworkInterfaces') {
+    const nets = networkInterfaces();
+    const interfaces: string[] = [];
+
+    for (const name of Object.keys(nets)) {
+      const netInterface = nets[name];
+      if (!netInterface) continue;
+
+      const hasIPv4 = netInterface.some(net => {
+        const familyV4 = typeof net.family === 'string' ? 'IPv4' : 4;
+        return net.family === familyV4 && !net.internal;
+      });
+
+      if (hasIPv4) interfaces.push(name);
+    }
+
+    streamDeck.ui.current?.sendToPropertyInspector({
+      event: 'getNetworkInterfaces',
+      items: interfaces.map(name => ({
+        label: name,
+        value: name
+      }))
+    });
+  }
+}
+```
+
+Key points:
+- SDPI Components automatically handles request/response cycle
+- `datasource` attribute triggers request when property inspector loads
+- Response must include `items` array with `label`/`value` objects
+- No custom JavaScript needed in HTML files
+- `streamDeck.ui.current?.sendToPropertyInspector()` sends data to active PI
 
 ### Timer Management Patterns
 
@@ -107,16 +176,32 @@ override onWillDisappear(ev: WillDisappearEvent<Settings>) {
 ```
 
 **Settings Management**:
-- `IPSettings` type includes `refreshInterval?: number` property
+```typescript
+type IPSettings = {
+  refreshInterval?: number;        // Auto-refresh interval in ms (default: 600000)
+  customLabel?: string;             // For single IP actions (max 12 chars)
+  customLocalLabel?: string;        // For dual IP/toggle actions (max 12 chars)
+  customPublicLabel?: string;       // For dual IP/toggle actions (max 12 chars)
+  multilineIP?: boolean;            // Split IP across two lines (default: false)
+  networkInterface?: string;        // Specific interface or empty for auto-detect
+};
+
+type ToggleSettings = IPSettings & {
+  mode: 'dual' | 'local' | 'public';  // Toggle action current display mode
+};
+```
+
 - Default interval: 600000ms (10 minutes)
 - Property inspector UI updates settings via Stream Deck SDK
 - `onDidReceiveSettings` event restarts timer with new interval
+- All settings persist across Stream Deck restarts automatically
 
 ### Dependencies
 
 **Runtime**:
 - `@elgato/streamdeck`: Official Stream Deck SDK v1.0.0
 - `canvas`: For pixel-perfect text rendering (installed in plugin directory)
+- `clipboardy`: Cross-platform clipboard access for copy functionality
 
 **Development**:
 - `@elgato/cli`: Stream Deck development tools
@@ -125,11 +210,45 @@ override onWillDisappear(ev: WillDisappearEvent<Settings>) {
 
 ## Important Notes
 
+### Core Architecture
 - Canvas dependency requires separate installation in plugin directory due to native bindings
 - IP address caching prevents API rate limiting (5-minute intervals for public IP)
 - Auto-refresh timers are efficiently managed with single timer per action type
 - Manual button press bypasses cache for immediate refresh, auto-refresh respects cache
-- Property inspector settings persist across Stream Deck restarts
+- Property inspector settings persist across Stream Deck restarts automatically
 - Text shadows are essential for readability on transparent Stream Deck buttons
 - Plugin auto-restarts during development when using `npm run watch`
 - Timer cleanup is critical in `onWillDisappear` to prevent memory leaks
+
+### Long-Press Pattern Best Practices
+- Use `pressTimers` Map to track press state per action instance
+- Store timestamp, timer, and any data needed for operation (IPs, mode, etc.)
+- Always `clearTimeout()` in `onKeyUp` to prevent memory leaks
+- Clean up press timers in `onWillDisappear` for removed actions
+- 800ms threshold provides good balance between accidental/intentional presses
+
+### SDPI Components Datasource Pattern
+- Always use `datasource` attribute instead of custom JavaScript for dynamic dropdowns
+- Response payload must include `event` and `items` array with `label`/`value` objects
+- Use `streamDeck.ui.current?.sendToPropertyInspector()` to respond
+- Optional chaining (`?`) prevents errors when no PI is open
+- SDPI handles all request/response timing automatically
+
+### Multi-line Display Considerations
+- `splitIP()` splits on dots: `['192', '168', '1', '100']` → `192.168.` / `1.100`
+- Font sizes must be tested to prevent edge clipping at 144x144 resolution
+- Different vertical spacing for single-line vs multi-line layouts
+- Status dot positioning uses dynamic text measurement for centering
+
+### Network Interface Selection
+- Filter interfaces to only show those with active IPv4 addresses
+- Handle both string and numeric family types: `'IPv4'` or `4`
+- Empty string setting value means auto-detect (default behavior)
+- Fall through to auto-detect if selected interface becomes unavailable
+- Dropdown populates on PI load, updates reflect on next refresh
+
+### Custom Labels
+- 12 character limit ensures text fits within 144px button width
+- Blank/empty values default to "LOCAL IP" / "PUBLIC IP"
+- Labels are optional - all actions work without customization
+- Canvas text measurement can validate label width before rendering
