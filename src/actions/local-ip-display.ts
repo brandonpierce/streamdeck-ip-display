@@ -117,22 +117,22 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 
 			// LOCAL IP Section (Top)
 			ctx.fillStyle = '#C0C0C0';
-			ctx.font = 'bold 12px Arial';
+			ctx.font = 'bold 13px Arial';
 			const localLabel = settings.customLocalLabel || 'LOCAL IP';
-			ctx.fillText(localLabel, 72, 12);
+			ctx.fillText(localLabel, 72, 10);
 
 			ctx.fillStyle = '#FFFFFF';
-			ctx.font = 'bold 18px "Courier New", Consolas, monospace';
+			ctx.font = 'bold 20px "Courier New", Consolas, monospace';
 			if (localSplit) {
-				ctx.fillText(localSplit.line1, 72, 28);
-				ctx.fillText(localSplit.line2, 72, 46);
+				ctx.fillText(localSplit.line1, 72, 27);
+				ctx.fillText(localSplit.line2, 72, 49);
 			} else {
-				ctx.fillText('No Local IP', 72, 37);
+				ctx.fillText('No Local IP', 72, 38);
 			}
 
-			// PUBLIC IP Section (Bottom)
+			// PUBLIC IP Section (Bottom - anchored from bottom)
 			// Measure text width for dot positioning
-			ctx.font = 'bold 12px Arial';
+			ctx.font = 'bold 13px Arial';
 			const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
 			const publicLabelMetrics = ctx.measureText(publicLabel);
 			const publicDotX = 72 - (publicLabelMetrics.width / 2) - 8;
@@ -146,19 +146,19 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 				ctx.fillStyle = '#FF6B6B'; // Red - no connection
 			}
 			ctx.beginPath();
-			ctx.arc(publicDotX, 70, 3, 0, 2 * Math.PI);
+			ctx.arc(publicDotX, 95, 3, 0, 2 * Math.PI);
 			ctx.fill();
 
 			ctx.fillStyle = '#C0C0C0';
-			ctx.fillText(publicLabel, 72, 70);
+			ctx.fillText(publicLabel, 72, 95);
 
 			ctx.fillStyle = '#FFFFFF';
-			ctx.font = 'bold 18px "Courier New", Consolas, monospace';
+			ctx.font = 'bold 20px "Courier New", Consolas, monospace';
 			if (publicSplit) {
-				ctx.fillText(publicSplit.line1, 72, 86);
-				ctx.fillText(publicSplit.line2, 72, 104);
+				ctx.fillText(publicSplit.line1, 72, 113);
+				ctx.fillText(publicSplit.line2, 72, 135);
 			} else {
-				ctx.fillText('No Public IP', 72, 95);
+				ctx.fillText('No Public IP', 72, 124);
 			}
 		} else {
 			// Single-line mode - original layout

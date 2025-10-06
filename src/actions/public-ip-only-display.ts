@@ -126,12 +126,12 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 			ctx.fillText(label, 72, 35);
 
 			ctx.fillStyle = '#FFFFFF';
-			ctx.font = 'bold 26px "Courier New", Consolas, monospace';
+			ctx.font = 'bold 32px "Courier New", Consolas, monospace';
 			if (publicSplit) {
-				ctx.fillText(publicSplit.line1, 72, 60);
-				ctx.fillText(publicSplit.line2, 72, 90);
+				ctx.fillText(publicSplit.line1, 72, 65);
+				ctx.fillText(publicSplit.line2, 72, 100);
 			} else {
-				ctx.fillText('No Public IP', 72, 75);
+				ctx.fillText('No Public IP', 72, 82);
 			}
 		} else {
 			// Single-line mode - original layout
