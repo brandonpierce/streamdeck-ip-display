@@ -161,9 +161,25 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				}
 
 				// PUBLIC IP Section (Bottom)
-				ctx.fillStyle = '#C0C0C0';
+				// Measure text width for dot positioning
 				ctx.font = 'bold 12px Arial';
 				const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
+				const publicLabelMetrics = ctx.measureText(publicLabel);
+				const publicDotX = 72 - (publicLabelMetrics.width / 2) - 8;
+
+				// Status indicator dot before label
+				if (localIP && publicIP) {
+					ctx.fillStyle = '#00FF00'; // Green - both connected
+				} else if (localIP || publicIP) {
+					ctx.fillStyle = '#FFAA00'; // Orange - partial connection
+				} else {
+					ctx.fillStyle = '#FF6B6B'; // Red - no connection
+				}
+				ctx.beginPath();
+				ctx.arc(publicDotX, 70, 3, 0, 2 * Math.PI);
+				ctx.fill();
+
+				ctx.fillStyle = '#C0C0C0';
 				ctx.fillText(publicLabel, 72, 70);
 
 				ctx.fillStyle = '#FFFFFF';
@@ -185,32 +201,49 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.font = 'bold 16px "Courier New", Consolas, monospace';
 				ctx.fillText(localIP || 'No Local IP', 72, 45);
 
-				ctx.fillStyle = '#C0C0C0';
+				// Measure text width for dot positioning
 				ctx.font = 'bold 14px Arial';
 				const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
+				const publicLabelMetrics = ctx.measureText(publicLabel);
+				const publicDotX = 72 - (publicLabelMetrics.width / 2) - 8;
+
+				// Status indicator dot before PUBLIC IP label
+				if (localIP && publicIP) {
+					ctx.fillStyle = '#00FF00'; // Green - both connected
+				} else if (localIP || publicIP) {
+					ctx.fillStyle = '#FFAA00'; // Orange - partial connection
+				} else {
+					ctx.fillStyle = '#FF6B6B'; // Red - no connection
+				}
+				ctx.beginPath();
+				ctx.arc(publicDotX, 82, 3, 0, 2 * Math.PI);
+				ctx.fill();
+
+				ctx.fillStyle = '#C0C0C0';
 				ctx.fillText(publicLabel, 72, 82);
 
 				ctx.fillStyle = '#FFFFFF';
 				ctx.font = 'bold 16px "Courier New", Consolas, monospace';
 				ctx.fillText(publicIP || 'No Public IP', 72, 105);
 			}
-
-			// Connection status indicator
-			if (localIP && publicIP) {
-				ctx.fillStyle = '#00FF00'; // Green - both connected
-			} else if (localIP || publicIP) {
-				ctx.fillStyle = '#FFAA00'; // Orange - partial connection
-			} else {
-				ctx.fillStyle = '#FF6B6B'; // Red - no connection
-			}
 		} else if (mode === 'local') {
 			if (settings.multilineIP) {
 				// Multiline local IP display
 				const localSplit = this.splitIP(localIP);
 
-				ctx.fillStyle = '#C0C0C0';
+				// Measure text width for dot positioning
 				ctx.font = 'bold 16px Arial';
 				const localLabel = settings.customLocalLabel || 'LOCAL IP';
+				const localLabelMetrics = ctx.measureText(localLabel);
+				const localDotX = 72 - (localLabelMetrics.width / 2) - 10;
+
+				// Status indicator dot before label
+				ctx.fillStyle = localIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
+				ctx.beginPath();
+				ctx.arc(localDotX, 35, 4, 0, 2 * Math.PI);
+				ctx.fill();
+
+				ctx.fillStyle = '#C0C0C0';
 				ctx.fillText(localLabel, 72, 35);
 
 				ctx.fillStyle = '#FFFFFF';
@@ -223,26 +256,43 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				}
 			} else {
 				// Single-line local IP display
-				ctx.fillStyle = '#C0C0C0';
+				// Measure text width for dot positioning
 				ctx.font = 'bold 16px Arial';
 				const localLabel = settings.customLocalLabel || 'LOCAL IP';
+				const localLabelMetrics = ctx.measureText(localLabel);
+				const localDotX = 72 - (localLabelMetrics.width / 2) - 10;
+
+				// Status indicator dot before label
+				ctx.fillStyle = localIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
+				ctx.beginPath();
+				ctx.arc(localDotX, 48, 4, 0, 2 * Math.PI);
+				ctx.fill();
+
+				ctx.fillStyle = '#C0C0C0';
 				ctx.fillText(localLabel, 72, 48);
 
 				ctx.fillStyle = '#FFFFFF';
 				ctx.font = 'bold 18px "Courier New", Consolas, monospace';
 				ctx.fillText(localIP || 'No Local IP', 72, 80);
 			}
-
-			// Connection status indicator
-			ctx.fillStyle = localIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
 		} else {
 			if (settings.multilineIP) {
 				// Multiline public IP display
 				const publicSplit = this.splitIP(publicIP);
 
-				ctx.fillStyle = '#C0C0C0';
+				// Measure text width for dot positioning
 				ctx.font = 'bold 16px Arial';
 				const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
+				const publicLabelMetrics = ctx.measureText(publicLabel);
+				const publicDotX = 72 - (publicLabelMetrics.width / 2) - 10;
+
+				// Status indicator dot before label
+				ctx.fillStyle = publicIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
+				ctx.beginPath();
+				ctx.arc(publicDotX, 35, 4, 0, 2 * Math.PI);
+				ctx.fill();
+
+				ctx.fillStyle = '#C0C0C0';
 				ctx.fillText(publicLabel, 72, 35);
 
 				ctx.fillStyle = '#FFFFFF';
@@ -255,25 +305,26 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				}
 			} else {
 				// Single-line public IP display
-				ctx.fillStyle = '#C0C0C0';
+				// Measure text width for dot positioning
 				ctx.font = 'bold 16px Arial';
 				const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
+				const publicLabelMetrics = ctx.measureText(publicLabel);
+				const publicDotX = 72 - (publicLabelMetrics.width / 2) - 10;
+
+				// Status indicator dot before label
+				ctx.fillStyle = publicIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
+				ctx.beginPath();
+				ctx.arc(publicDotX, 48, 4, 0, 2 * Math.PI);
+				ctx.fill();
+
+				ctx.fillStyle = '#C0C0C0';
 				ctx.fillText(publicLabel, 72, 48);
 
 				ctx.fillStyle = '#FFFFFF';
 				ctx.font = 'bold 18px "Courier New", Consolas, monospace';
 				ctx.fillText(publicIP || 'No Public IP', 72, 80);
 			}
-
-			// Connection status indicator
-			ctx.fillStyle = publicIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
 		}
-
-		// Draw status indicator dot
-		ctx.beginPath();
-		const dotY = mode === 'dual' ? 125 : 115;
-		ctx.arc(72, dotY, mode === 'dual' ? 3 : 4, 0, 2 * Math.PI);
-		ctx.fill();
 
 		// Convert to base64 data URI
 		const buffer = canvas.toBuffer('image/png');

@@ -110,9 +110,19 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 			const publicSplit = this.splitIP(publicIP);
 
 			// PUBLIC IP Section (Centered)
-			ctx.fillStyle = '#C0C0C0';
+			// Measure text width for dot positioning
 			ctx.font = 'bold 16px Arial';
 			const label = settings.customLabel || 'PUBLIC IP';
+			const labelMetrics = ctx.measureText(label);
+			const dotX = 72 - (labelMetrics.width / 2) - 10;
+
+			// Status indicator dot before label
+			ctx.fillStyle = publicIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
+			ctx.beginPath();
+			ctx.arc(dotX, 35, 4, 0, 2 * Math.PI);
+			ctx.fill();
+
+			ctx.fillStyle = '#C0C0C0';
 			ctx.fillText(label, 72, 35);
 
 			ctx.fillStyle = '#FFFFFF';
@@ -126,21 +136,25 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 		} else {
 			// Single-line mode - original layout
 			// PUBLIC IP Section (Centered)
-			ctx.fillStyle = '#C0C0C0';
+			// Measure text width for dot positioning
 			ctx.font = 'bold 16px Arial';
 			const label = settings.customLabel || 'PUBLIC IP';
+			const labelMetrics = ctx.measureText(label);
+			const dotX = 72 - (labelMetrics.width / 2) - 10;
+
+			// Status indicator dot before label
+			ctx.fillStyle = publicIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
+			ctx.beginPath();
+			ctx.arc(dotX, 48, 4, 0, 2 * Math.PI);
+			ctx.fill();
+
+			ctx.fillStyle = '#C0C0C0';
 			ctx.fillText(label, 72, 48);
 
 			ctx.fillStyle = '#FFFFFF';
 			ctx.font = 'bold 18px "Courier New", Consolas, monospace';
 			ctx.fillText(publicIP || 'No Public IP', 72, 80);
 		}
-
-		// Connection status indicator (small dot)
-		ctx.fillStyle = publicIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
-		ctx.beginPath();
-		ctx.arc(72, 115, 4, 0, 2 * Math.PI);
-		ctx.fill();
 
 		// Convert to base64 data URI
 		const buffer = canvas.toBuffer('image/png');
