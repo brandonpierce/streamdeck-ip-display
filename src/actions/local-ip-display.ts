@@ -1,4 +1,4 @@
-import streamDeck, { action, KeyDownEvent, KeyUpEvent, SingletonAction, WillAppearEvent, WillDisappearEvent, DidReceiveSettingsEvent } from "@elgato/streamdeck";
+import streamDeck, { action, KeyDownEvent, KeyUpEvent, SingletonAction, WillAppearEvent, WillDisappearEvent, DidReceiveSettingsEvent, SendToPluginEvent } from "@elgato/streamdeck";
 import { networkInterfaces } from "os";
 import { createCanvas } from "canvas";
 import clipboard from "clipboardy";
@@ -14,7 +14,7 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 		this.visibleActions.set(ev.action.id, ev);
 
 		// Display initial content
-		const localIP = this.getLocalIPAddress();
+		const localIP = this.getLocalIPAddress(ev.payload.settings);
 		const publicIP = await this.getPublicIPAddress();
 		const imageDataUri = this.generateIPImage(localIP, publicIP, ev.payload.settings);
 		await ev.action.setImage(imageDataUri);
@@ -25,7 +25,7 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 
 	override async onKeyDown(ev: KeyDownEvent<IPSettings>): Promise<void> {
 		const pressTime = Date.now();
-		const localIP = this.getLocalIPAddress();
+		const localIP = this.getLocalIPAddress(ev.payload.settings);
 		const publicIP = await this.getPublicIPAddress();
 
 		// Start long-press timer
@@ -48,7 +48,7 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 		if (duration < this.LONG_PRESS_THRESHOLD) {
 			// Short press - refresh display with cache bypass
 			this.publicIPCache = { ip: null, timestamp: 0 }; // Clear cache for fresh fetch
-			const localIP = this.getLocalIPAddress();
+			const localIP = this.getLocalIPAddress(ev.payload.settings);
 			const publicIP = await this.getPublicIPAddress();
 			const imageDataUri = this.generateIPImage(localIP, publicIP, ev.payload.settings);
 			await ev.action.setImage(imageDataUri);
@@ -81,10 +81,41 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 		this.startRefreshTimer(ev.payload.settings);
 
 		// Refresh display with new settings
-		const localIP = this.getLocalIPAddress();
+		const localIP = this.getLocalIPAddress(ev.payload.settings);
 		const publicIP = await this.getPublicIPAddress();
 		const imageDataUri = this.generateIPImage(localIP, publicIP, ev.payload.settings);
 		await ev.action.setImage(imageDataUri);
+	}
+
+	override onSendToPlugin(ev: SendToPluginEvent<any, IPSettings>): void {
+		const payload = ev.payload as { event?: string };
+
+		if (payload.event === 'getNetworkInterfaces') {
+			const nets = networkInterfaces();
+			const interfaces: string[] = [];
+
+			for (const name of Object.keys(nets)) {
+				const netInterface = nets[name];
+				if (!netInterface) continue;
+
+				const hasIPv4 = netInterface.some(net => {
+					const familyV4 = typeof net.family === 'string' ? 'IPv4' : 4;
+					return net.family === familyV4 && !net.internal;
+				});
+
+				if (hasIPv4) {
+					interfaces.push(name);
+				}
+			}
+
+			streamDeck.ui.current?.sendToPropertyInspector({
+				event: 'getNetworkInterfaces',
+				items: interfaces.map(name => ({
+					label: name,
+					value: name
+				}))
+			});
+		}
 	}
 
 	private splitIP(ip: string | null): { line1: string, line2: string } | null {
@@ -205,9 +236,24 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 		return `data:image/png;base64,${base64}`;
 	}
 
-	private getLocalIPAddress(): string | null {
+	private getLocalIPAddress(settings: IPSettings): string | null {
 		const nets = networkInterfaces();
 
+		// If specific interface requested, use it
+		if (settings.networkInterface) {
+			const netInterface = nets[settings.networkInterface];
+			if (netInterface) {
+				for (const net of netInterface) {
+					const familyV4Value = typeof net.family === 'string' ? 'IPv4' : 4;
+					if (net.family === familyV4Value && !net.internal) {
+						return net.address;
+					}
+				}
+			}
+			// Fall through to auto-detect if specified interface not found
+		}
+
+		// Auto-detect: return first non-internal IPv4
 		for (const name of Object.keys(nets)) {
 			const netInterface = nets[name];
 			if (!netInterface) continue;
@@ -279,7 +325,7 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 		// Refresh all visible action instances
 		for (const actionEvent of this.visibleActions.values()) {
 			try {
-				const localIP = this.getLocalIPAddress();
+				const localIP = this.getLocalIPAddress(actionEvent.payload.settings);
 				const publicIP = await this.getPublicIPAddress();
 				const imageDataUri = this.generateIPImage(localIP, publicIP, actionEvent.payload.settings);
 				await actionEvent.action.setImage(imageDataUri);
@@ -329,4 +375,5 @@ type IPSettings = {
 	customLocalLabel?: string;
 	customPublicLabel?: string;
 	multilineIP?: boolean;
+	networkInterface?: string;
 };

@@ -19,6 +19,12 @@
         <sdpi-textfield setting="customPublicLabel" placeholder="PUBLIC IP" maxlength="12"></sdpi-textfield>
     </sdpi-item>
 
+    <sdpi-item label="Network Interface">
+        <sdpi-select setting="networkInterface" datasource="getNetworkInterfaces" loading="Loading interfaces...">
+            <option value="">Auto-detect (default)</option>
+        </sdpi-select>
+    </sdpi-item>
+
     <sdpi-item label="IP Display Format">
         <sdpi-checkbox setting="multilineIP" label="Split IP across two lines (larger font)"></sdpi-checkbox>
     </sdpi-item>
