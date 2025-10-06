@@ -8,6 +8,7 @@ type ToggleSettings = {
 	refreshInterval?: number;
 	customLocalLabel?: string;
 	customPublicLabel?: string;
+	multilineIP?: boolean;
 };
 
 @action({ UUID: "io.piercefamily.ip-display.toggle" })
@@ -106,6 +107,16 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 		await ev.action.setImage(imageDataUri);
 	}
 
+	private splitIP(ip: string | null): { line1: string, line2: string } | null {
+		if (!ip) return null;
+		const parts = ip.split('.');
+		if (parts.length !== 4) return null;
+		return {
+			line1: `${parts[0]}.${parts[1]}.`,
+			line2: `${parts[2]}.${parts[3]}`
+		};
+	}
+
 	private getNextMode(currentMode: string): 'dual' | 'local' | 'public' {
 		switch (currentMode) {
 			case 'dual': return 'local';
@@ -121,7 +132,7 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 
 		// Text shadow for readability on transparent background
 		ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-		ctx.shadowBlur = 4;
+		ctx.shadowBlur = 2;
 		ctx.shadowOffsetX = 1;
 		ctx.shadowOffsetY = 1;
 
@@ -129,24 +140,60 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 		ctx.textBaseline = 'middle';
 
 		if (mode === 'dual') {
-			// Dual IP display (matches Dual IP Display layout)
-			ctx.fillStyle = '#A0A0A0';
-			ctx.font = 'bold 12px Arial';
-			const localLabel = settings.customLocalLabel || 'LOCAL IP';
-			ctx.fillText(localLabel, 72, 25);
+			if (settings.multilineIP) {
+				// Multiline dual IP display
+				const localSplit = this.splitIP(localIP);
+				const publicSplit = this.splitIP(publicIP);
 
-			ctx.fillStyle = '#FFFFFF';
-			ctx.font = 'bold 16px Arial';
-			ctx.fillText(localIP || 'No Local IP', 72, 45);
+				// LOCAL IP Section (Top)
+				ctx.fillStyle = '#C0C0C0';
+				ctx.font = 'bold 12px Arial';
+				const localLabel = settings.customLocalLabel || 'LOCAL IP';
+				ctx.fillText(localLabel, 72, 12);
 
-			ctx.fillStyle = '#A0A0A0';
-			ctx.font = 'bold 12px Arial';
-			const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
-			ctx.fillText(publicLabel, 72, 85);
+				ctx.fillStyle = '#FFFFFF';
+				ctx.font = 'bold 18px "Courier New", Consolas, monospace';
+				if (localSplit) {
+					ctx.fillText(localSplit.line1, 72, 28);
+					ctx.fillText(localSplit.line2, 72, 46);
+				} else {
+					ctx.fillText('No Local IP', 72, 37);
+				}
 
-			ctx.fillStyle = '#FFFFFF';
-			ctx.font = 'bold 16px Arial';
-			ctx.fillText(publicIP || 'No Public IP', 72, 105);
+				// PUBLIC IP Section (Bottom)
+				ctx.fillStyle = '#C0C0C0';
+				ctx.font = 'bold 12px Arial';
+				const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
+				ctx.fillText(publicLabel, 72, 70);
+
+				ctx.fillStyle = '#FFFFFF';
+				ctx.font = 'bold 18px "Courier New", Consolas, monospace';
+				if (publicSplit) {
+					ctx.fillText(publicSplit.line1, 72, 86);
+					ctx.fillText(publicSplit.line2, 72, 104);
+				} else {
+					ctx.fillText('No Public IP', 72, 95);
+				}
+			} else {
+				// Single-line dual IP display
+				ctx.fillStyle = '#C0C0C0';
+				ctx.font = 'bold 14px Arial';
+				const localLabel = settings.customLocalLabel || 'LOCAL IP';
+				ctx.fillText(localLabel, 72, 22);
+
+				ctx.fillStyle = '#FFFFFF';
+				ctx.font = 'bold 16px "Courier New", Consolas, monospace';
+				ctx.fillText(localIP || 'No Local IP', 72, 45);
+
+				ctx.fillStyle = '#C0C0C0';
+				ctx.font = 'bold 14px Arial';
+				const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
+				ctx.fillText(publicLabel, 72, 82);
+
+				ctx.fillStyle = '#FFFFFF';
+				ctx.font = 'bold 16px "Courier New", Consolas, monospace';
+				ctx.fillText(publicIP || 'No Public IP', 72, 105);
+			}
 
 			// Connection status indicator
 			if (localIP && publicIP) {
@@ -157,28 +204,66 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.fillStyle = '#FF6B6B'; // Red - no connection
 			}
 		} else if (mode === 'local') {
-			// Local IP only display
-			ctx.fillStyle = '#A0A0A0';
-			ctx.font = 'bold 14px Arial';
-			const localLabel = settings.customLocalLabel || 'LOCAL IP';
-			ctx.fillText(localLabel, 72, 55);
+			if (settings.multilineIP) {
+				// Multiline local IP display
+				const localSplit = this.splitIP(localIP);
 
-			ctx.fillStyle = '#FFFFFF';
-			ctx.font = 'bold 18px Arial';
-			ctx.fillText(localIP || 'No Local IP', 72, 80);
+				ctx.fillStyle = '#C0C0C0';
+				ctx.font = 'bold 16px Arial';
+				const localLabel = settings.customLocalLabel || 'LOCAL IP';
+				ctx.fillText(localLabel, 72, 35);
+
+				ctx.fillStyle = '#FFFFFF';
+				ctx.font = 'bold 26px "Courier New", Consolas, monospace';
+				if (localSplit) {
+					ctx.fillText(localSplit.line1, 72, 60);
+					ctx.fillText(localSplit.line2, 72, 90);
+				} else {
+					ctx.fillText('No Local IP', 72, 75);
+				}
+			} else {
+				// Single-line local IP display
+				ctx.fillStyle = '#C0C0C0';
+				ctx.font = 'bold 16px Arial';
+				const localLabel = settings.customLocalLabel || 'LOCAL IP';
+				ctx.fillText(localLabel, 72, 48);
+
+				ctx.fillStyle = '#FFFFFF';
+				ctx.font = 'bold 18px "Courier New", Consolas, monospace';
+				ctx.fillText(localIP || 'No Local IP', 72, 80);
+			}
 
 			// Connection status indicator
 			ctx.fillStyle = localIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
 		} else {
-			// Public IP only display
-			ctx.fillStyle = '#A0A0A0';
-			ctx.font = 'bold 14px Arial';
-			const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
-			ctx.fillText(publicLabel, 72, 55);
+			if (settings.multilineIP) {
+				// Multiline public IP display
+				const publicSplit = this.splitIP(publicIP);
 
-			ctx.fillStyle = '#FFFFFF';
-			ctx.font = 'bold 18px Arial';
-			ctx.fillText(publicIP || 'No Public IP', 72, 80);
+				ctx.fillStyle = '#C0C0C0';
+				ctx.font = 'bold 16px Arial';
+				const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
+				ctx.fillText(publicLabel, 72, 35);
+
+				ctx.fillStyle = '#FFFFFF';
+				ctx.font = 'bold 26px "Courier New", Consolas, monospace';
+				if (publicSplit) {
+					ctx.fillText(publicSplit.line1, 72, 60);
+					ctx.fillText(publicSplit.line2, 72, 90);
+				} else {
+					ctx.fillText('No Public IP', 72, 75);
+				}
+			} else {
+				// Single-line public IP display
+				ctx.fillStyle = '#C0C0C0';
+				ctx.font = 'bold 16px Arial';
+				const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
+				ctx.fillText(publicLabel, 72, 48);
+
+				ctx.fillStyle = '#FFFFFF';
+				ctx.font = 'bold 18px "Courier New", Consolas, monospace';
+				ctx.fillText(publicIP || 'No Public IP', 72, 80);
+			}
 
 			// Connection status indicator
 			ctx.fillStyle = publicIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
@@ -186,7 +271,7 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 
 		// Draw status indicator dot
 		ctx.beginPath();
-		const dotY = mode === 'dual' ? 125 : 105;
+		const dotY = mode === 'dual' ? 125 : 115;
 		ctx.arc(72, dotY, mode === 'dual' ? 3 : 4, 0, 2 * Math.PI);
 		ctx.fill();
 

@@ -87,38 +87,85 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 		await ev.action.setImage(imageDataUri);
 	}
 
+	private splitIP(ip: string | null): { line1: string, line2: string } | null {
+		if (!ip) return null;
+		const parts = ip.split('.');
+		if (parts.length !== 4) return null;
+		return {
+			line1: `${parts[0]}.${parts[1]}.`,
+			line2: `${parts[2]}.${parts[3]}`
+		};
+	}
+
 	private generateIPImage(localIP: string | null, publicIP: string | null, settings: IPSettings): string {
 		const canvas = createCanvas(144, 144);
 		const ctx = canvas.getContext('2d');
 
 		// Text shadow for readability on transparent background
 		ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-		ctx.shadowBlur = 4;
+		ctx.shadowBlur = 2;
 		ctx.shadowOffsetX = 1;
 		ctx.shadowOffsetY = 1;
 
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
 
-		// LOCAL IP Section (Top)
-		ctx.fillStyle = '#A0A0A0';
-		ctx.font = 'bold 12px Arial';
-		const localLabel = settings.customLocalLabel || 'LOCAL IP';
-		ctx.fillText(localLabel, 72, 25);
+		if (settings.multilineIP) {
+			// Multiline mode - larger font, split IPs
+			const localSplit = this.splitIP(localIP);
+			const publicSplit = this.splitIP(publicIP);
 
-		ctx.fillStyle = '#FFFFFF';
-		ctx.font = 'bold 16px Arial';
-		ctx.fillText(localIP || 'No Local IP', 72, 45);
+			// LOCAL IP Section (Top)
+			ctx.fillStyle = '#C0C0C0';
+			ctx.font = 'bold 12px Arial';
+			const localLabel = settings.customLocalLabel || 'LOCAL IP';
+			ctx.fillText(localLabel, 72, 12);
 
-		// PUBLIC IP Section (Bottom)
-		ctx.fillStyle = '#A0A0A0';
-		ctx.font = 'bold 12px Arial';
-		const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
-		ctx.fillText(publicLabel, 72, 85);
+			ctx.fillStyle = '#FFFFFF';
+			ctx.font = 'bold 18px "Courier New", Consolas, monospace';
+			if (localSplit) {
+				ctx.fillText(localSplit.line1, 72, 28);
+				ctx.fillText(localSplit.line2, 72, 46);
+			} else {
+				ctx.fillText('No Local IP', 72, 37);
+			}
 
-		ctx.fillStyle = '#FFFFFF';
-		ctx.font = 'bold 16px Arial';
-		ctx.fillText(publicIP || 'No Public IP', 72, 105);
+			// PUBLIC IP Section (Bottom)
+			ctx.fillStyle = '#C0C0C0';
+			ctx.font = 'bold 12px Arial';
+			const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
+			ctx.fillText(publicLabel, 72, 70);
+
+			ctx.fillStyle = '#FFFFFF';
+			ctx.font = 'bold 18px "Courier New", Consolas, monospace';
+			if (publicSplit) {
+				ctx.fillText(publicSplit.line1, 72, 86);
+				ctx.fillText(publicSplit.line2, 72, 104);
+			} else {
+				ctx.fillText('No Public IP', 72, 95);
+			}
+		} else {
+			// Single-line mode - original layout
+			// LOCAL IP Section (Top)
+			ctx.fillStyle = '#C0C0C0';
+			ctx.font = 'bold 14px Arial';
+			const localLabel = settings.customLocalLabel || 'LOCAL IP';
+			ctx.fillText(localLabel, 72, 22);
+
+			ctx.fillStyle = '#FFFFFF';
+			ctx.font = 'bold 16px "Courier New", Consolas, monospace';
+			ctx.fillText(localIP || 'No Local IP', 72, 45);
+
+			// PUBLIC IP Section (Bottom)
+			ctx.fillStyle = '#C0C0C0';
+			ctx.font = 'bold 14px Arial';
+			const publicLabel = settings.customPublicLabel || 'PUBLIC IP';
+			ctx.fillText(publicLabel, 72, 82);
+
+			ctx.fillStyle = '#FFFFFF';
+			ctx.font = 'bold 16px "Courier New", Consolas, monospace';
+			ctx.fillText(publicIP || 'No Public IP', 72, 105);
+		}
 
 		// Connection status indicator (small dot)
 		if (localIP && publicIP) {
@@ -261,4 +308,5 @@ type IPSettings = {
 	refreshInterval?: number;
 	customLocalLabel?: string;
 	customPublicLabel?: string;
+	multilineIP?: boolean;
 };

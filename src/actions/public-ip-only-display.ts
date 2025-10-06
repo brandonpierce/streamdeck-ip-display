@@ -82,33 +82,64 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 		await ev.action.setImage(imageDataUri);
 	}
 
+	private splitIP(ip: string | null): { line1: string, line2: string } | null {
+		if (!ip) return null;
+		const parts = ip.split('.');
+		if (parts.length !== 4) return null;
+		return {
+			line1: `${parts[0]}.${parts[1]}.`,
+			line2: `${parts[2]}.${parts[3]}`
+		};
+	}
+
 	private generatePublicIPImage(publicIP: string | null, settings: IPSettings): string {
 		const canvas = createCanvas(144, 144);
 		const ctx = canvas.getContext('2d');
 
 		// Text shadow for readability on transparent background
 		ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-		ctx.shadowBlur = 4;
+		ctx.shadowBlur = 2;
 		ctx.shadowOffsetX = 1;
 		ctx.shadowOffsetY = 1;
 
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
 
-		// PUBLIC IP Section (Centered)
-		ctx.fillStyle = '#A0A0A0';
-		ctx.font = 'bold 14px Arial';
-		const label = settings.customLabel || 'PUBLIC IP';
-		ctx.fillText(label, 72, 50);
+		if (settings.multilineIP) {
+			// Multiline mode - larger font, split IP
+			const publicSplit = this.splitIP(publicIP);
 
-		ctx.fillStyle = '#FFFFFF';
-		ctx.font = 'bold 18px Arial';
-		ctx.fillText(publicIP || 'No Public IP', 72, 80);
+			// PUBLIC IP Section (Centered)
+			ctx.fillStyle = '#C0C0C0';
+			ctx.font = 'bold 16px Arial';
+			const label = settings.customLabel || 'PUBLIC IP';
+			ctx.fillText(label, 72, 35);
+
+			ctx.fillStyle = '#FFFFFF';
+			ctx.font = 'bold 26px "Courier New", Consolas, monospace';
+			if (publicSplit) {
+				ctx.fillText(publicSplit.line1, 72, 60);
+				ctx.fillText(publicSplit.line2, 72, 90);
+			} else {
+				ctx.fillText('No Public IP', 72, 75);
+			}
+		} else {
+			// Single-line mode - original layout
+			// PUBLIC IP Section (Centered)
+			ctx.fillStyle = '#C0C0C0';
+			ctx.font = 'bold 16px Arial';
+			const label = settings.customLabel || 'PUBLIC IP';
+			ctx.fillText(label, 72, 48);
+
+			ctx.fillStyle = '#FFFFFF';
+			ctx.font = 'bold 18px "Courier New", Consolas, monospace';
+			ctx.fillText(publicIP || 'No Public IP', 72, 80);
+		}
 
 		// Connection status indicator (small dot)
 		ctx.fillStyle = publicIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
 		ctx.beginPath();
-		ctx.arc(72, 110, 4, 0, 2 * Math.PI);
+		ctx.arc(72, 115, 4, 0, 2 * Math.PI);
 		ctx.fill();
 
 		// Convert to base64 data URI
@@ -208,4 +239,5 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 type IPSettings = {
 	refreshInterval?: number;
 	customLabel?: string;
+	multilineIP?: boolean;
 };
