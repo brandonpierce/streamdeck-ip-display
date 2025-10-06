@@ -126,7 +126,7 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 			ctx.fillText(label, 72, 35);
 
 			ctx.fillStyle = '#FFFFFF';
-			ctx.font = 'bold 32px "Courier New", Consolas, monospace';
+			ctx.font = 'bold 28px "Courier New", Consolas, monospace';
 			if (localSplit) {
 				ctx.fillText(localSplit.line1, 72, 65);
 				ctx.fillText(localSplit.line2, 72, 100);
