@@ -58,7 +58,8 @@ export class IPDisplay extends SingletonAction<IPSettings>
 - `onKeyUp`: Checks duration, executes copy if ≥ threshold, else refreshes
 - Uses `clipboardy` library for cross-platform clipboard access
 - Visual feedback via `showOk()` (success) or `showAlert()` (failure)
-- Dual IP format: `Local: <ip>\nPublic: <ip>`
+- Dual IP format: `<localIP>,<publicIP>` (comma-separated)
+- Single IP format: Just the IP address without any formatting
 
 **Custom Label Support**:
 - Settings fields: `customLabel`, `customLocalLabel`, `customPublicLabel`
@@ -72,6 +73,15 @@ export class IPDisplay extends SingletonAction<IPSettings>
 - Larger fonts (20px vs 16px for IPs, 13px vs 14px for labels)
 - Different vertical spacing calculations for single vs multi-line
 - `splitIP()` utility function handles formatting
+
+**Custom Color Customization**:
+- Settings fields: `labelColor?: string`, `ipColor?: string`
+- Color picker UI using `<sdpi-color>` SDPI Components
+- Canvas rendering uses fallback pattern: `settings.labelColor || '#C0C0C0'`
+- Defaults: Silver (#C0C0C0) for labels, White (#FFFFFF) for IP addresses
+- All color pickers implemented in all four action types
+- Optional fields maintain backward compatibility
+- Status dots remain hardcoded (green/orange/red) for connection status
 
 ### Build Process
 
@@ -184,6 +194,8 @@ type IPSettings = {
   customPublicLabel?: string;       // For dual IP/toggle actions (max 12 chars)
   multilineIP?: boolean;            // Split IP across two lines (default: false)
   networkInterface?: string;        // Specific interface or empty for auto-detect
+  labelColor?: string;              // Custom label color (default: #C0C0C0 silver)
+  ipColor?: string;                 // Custom IP address color (default: #FFFFFF white)
 };
 
 type ToggleSettings = IPSettings & {

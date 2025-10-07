@@ -33,7 +33,11 @@ A comprehensive Stream Deck plugin for IP address monitoring with four button ty
   - Override to select specific adapter for multi-network setups
 - **Clipboard Copy**: Long-press (800ms) any button to copy IP address(es) to clipboard
   - Visual feedback with success/failure indicators
-  - Dual IP buttons copy both addresses with labels
+  - Dual IP buttons copy both addresses comma-separated
+- **Custom Colors**: Personalize label and IP address colors
+  - Choose any color for label text (default: silver)
+  - Choose any color for IP addresses (default: white)
+  - Color picker available in property inspector for all button types
 
 ### Smart Features
 - **Settings Persistence**: All preferences saved across Stream Deck restarts
@@ -122,6 +126,12 @@ Select any IP Display button in Stream Deck software to access the property insp
 - Improves readability for longer IP addresses
 - Automatically adjusts spacing to prevent edge clipping
 
+#### Custom Colors (All actions)
+- **Label Color**: Choose custom color for label text
+- **IP Address Color**: Choose custom color for IP addresses
+- Defaults: Silver labels, White IP addresses
+- Colors update immediately on change
+
 #### Auto Refresh Interval
 - **Manual Only**: No automatic refresh (refresh only on button press)
 - **1 minute**: Fast refresh for dynamic environments
@@ -139,7 +149,7 @@ Select any IP Display button in Stream Deck software to access the property insp
 #### Long Press (≥ 800ms)
 - **All Buttons**: Copies IP address(es) to clipboard
   - Single IP: Copies just the IP address
-  - Dual IP: Copies both with labels: `Local: 192.168.1.100\nPublic: 203.0.113.45`
+  - Dual IP: Copies both comma-separated: `192.168.1.100,203.0.113.45`
   - Visual feedback: ✓ success or ✗ failure
 
 ### Settings Persistence

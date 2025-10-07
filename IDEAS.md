@@ -24,6 +24,10 @@ Toggle checkbox in property inspector to split IP addresses across two lines wit
 **Status**: ✅ Implemented (v1.1.0 - 2025-01-06)
 Professional custom icons for plugin and all four action types with consistent design language.
 
+### 6. Custom Color Selection
+**Status**: ✅ Implemented (v1.2.0 - 2025-01-06)
+Color picker controls in property inspector allow users to customize label text and IP address colors. Supports all four action types with automatic fallback to defaults (silver for labels, white for IP addresses).
+
 ## High-Value, Easy Additions
 
 ### 1. WiFi Network Name (SSID)
