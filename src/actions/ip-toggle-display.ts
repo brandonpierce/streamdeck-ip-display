@@ -164,11 +164,16 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 		const canvas = createCanvas(144, 144);
 		const ctx = canvas.getContext('2d');
 
-		// Text shadow for readability on transparent background
+		// Text shadow and stroke for readability on transparent background
 		ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
 		ctx.shadowBlur = 2;
 		ctx.shadowOffsetX = 1;
 		ctx.shadowOffsetY = 1;
+
+		// Text stroke configuration
+		ctx.strokeStyle = 'black';
+		ctx.lineWidth = 3;
+		ctx.lineJoin = 'round';
 
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
@@ -183,14 +188,18 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.fillStyle = settings.labelColor || '#C0C0C0';
 				ctx.font = 'bold 13px Arial';
 				const localLabel = settings.customLocalLabel || 'LOCAL IP';
+				ctx.strokeText(localLabel, 72, 10);
 				ctx.fillText(localLabel, 72, 10);
 
 				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 20px "Courier New", Consolas, monospace';
 				if (localSplit) {
+					ctx.strokeText(localSplit.line1, 72, 27);
 					ctx.fillText(localSplit.line1, 72, 27);
+					ctx.strokeText(localSplit.line2, 72, 49);
 					ctx.fillText(localSplit.line2, 72, 49);
 				} else {
+					ctx.strokeText('No Local IP', 72, 38);
 					ctx.fillText('No Local IP', 72, 38);
 				}
 
@@ -214,14 +223,18 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.fill();
 
 				ctx.fillStyle = settings.labelColor || '#C0C0C0';
+				ctx.strokeText(publicLabel, 72, 95);
 				ctx.fillText(publicLabel, 72, 95);
 
 				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 20px "Courier New", Consolas, monospace';
 				if (publicSplit) {
+					ctx.strokeText(publicSplit.line1, 72, 113);
 					ctx.fillText(publicSplit.line1, 72, 113);
+					ctx.strokeText(publicSplit.line2, 72, 135);
 					ctx.fillText(publicSplit.line2, 72, 135);
 				} else {
+					ctx.strokeText('No Public IP', 72, 124);
 					ctx.fillText('No Public IP', 72, 124);
 				}
 			} else {
@@ -229,10 +242,12 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.fillStyle = settings.labelColor || '#C0C0C0';
 				ctx.font = 'bold 14px Arial';
 				const localLabel = settings.customLocalLabel || 'LOCAL IP';
+				ctx.strokeText(localLabel, 72, 22);
 				ctx.fillText(localLabel, 72, 22);
 
 				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 16px "Courier New", Consolas, monospace';
+				ctx.strokeText(localIP || 'No Local IP', 72, 45);
 				ctx.fillText(localIP || 'No Local IP', 72, 45);
 
 				// Measure text width for dot positioning
@@ -254,10 +269,12 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.fill();
 
 				ctx.fillStyle = settings.labelColor || '#C0C0C0';
+				ctx.strokeText(publicLabel, 72, 82);
 				ctx.fillText(publicLabel, 72, 82);
 
 				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 16px "Courier New", Consolas, monospace';
+				ctx.strokeText(publicIP || 'No Public IP', 72, 105);
 				ctx.fillText(publicIP || 'No Public IP', 72, 105);
 			}
 		} else if (mode === 'local') {
@@ -278,14 +295,18 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.fill();
 
 				ctx.fillStyle = settings.labelColor || '#C0C0C0';
+				ctx.strokeText(localLabel, 72, 35);
 				ctx.fillText(localLabel, 72, 35);
 
 				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 28px "Courier New", Consolas, monospace';
 				if (localSplit) {
+					ctx.strokeText(localSplit.line1, 72, 65);
 					ctx.fillText(localSplit.line1, 72, 65);
+					ctx.strokeText(localSplit.line2, 72, 100);
 					ctx.fillText(localSplit.line2, 72, 100);
 				} else {
+					ctx.strokeText('No Local IP', 72, 82);
 					ctx.fillText('No Local IP', 72, 82);
 				}
 			} else {
@@ -303,10 +324,12 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.fill();
 
 				ctx.fillStyle = settings.labelColor || '#C0C0C0';
+				ctx.strokeText(localLabel, 72, 48);
 				ctx.fillText(localLabel, 72, 48);
 
 				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 18px "Courier New", Consolas, monospace';
+				ctx.strokeText(localIP || 'No Local IP', 72, 80);
 				ctx.fillText(localIP || 'No Local IP', 72, 80);
 			}
 		} else {
@@ -327,14 +350,18 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.fill();
 
 				ctx.fillStyle = settings.labelColor || '#C0C0C0';
+				ctx.strokeText(publicLabel, 72, 35);
 				ctx.fillText(publicLabel, 72, 35);
 
 				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 28px "Courier New", Consolas, monospace';
 				if (publicSplit) {
+					ctx.strokeText(publicSplit.line1, 72, 65);
 					ctx.fillText(publicSplit.line1, 72, 65);
+					ctx.strokeText(publicSplit.line2, 72, 100);
 					ctx.fillText(publicSplit.line2, 72, 100);
 				} else {
+					ctx.strokeText('No Public IP', 72, 82);
 					ctx.fillText('No Public IP', 72, 82);
 				}
 			} else {
@@ -352,10 +379,12 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.fill();
 
 				ctx.fillStyle = settings.labelColor || '#C0C0C0';
+				ctx.strokeText(publicLabel, 72, 48);
 				ctx.fillText(publicLabel, 72, 48);
 
 				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 18px "Courier New", Consolas, monospace';
+				ctx.strokeText(publicIP || 'No Public IP', 72, 80);
 				ctx.fillText(publicIP || 'No Public IP', 72, 80);
 			}
 		}

@@ -96,11 +96,16 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 		const canvas = createCanvas(144, 144);
 		const ctx = canvas.getContext('2d');
 
-		// Text shadow for readability on transparent background
+		// Text shadow and stroke for readability on transparent background
 		ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
 		ctx.shadowBlur = 2;
 		ctx.shadowOffsetX = 1;
 		ctx.shadowOffsetY = 1;
+
+		// Text stroke configuration
+		ctx.strokeStyle = 'black';
+		ctx.lineWidth = 3;
+		ctx.lineJoin = 'round';
 
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
@@ -123,14 +128,18 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 			ctx.fill();
 
 			ctx.fillStyle = settings.labelColor || '#C0C0C0';
+			ctx.strokeText(label, 72, 35);
 			ctx.fillText(label, 72, 35);
 
 			ctx.fillStyle = settings.ipColor || '#FFFFFF';
 			ctx.font = 'bold 28px "Courier New", Consolas, monospace';
 			if (publicSplit) {
+				ctx.strokeText(publicSplit.line1, 72, 65);
 				ctx.fillText(publicSplit.line1, 72, 65);
+				ctx.strokeText(publicSplit.line2, 72, 100);
 				ctx.fillText(publicSplit.line2, 72, 100);
 			} else {
+				ctx.strokeText('No Public IP', 72, 82);
 				ctx.fillText('No Public IP', 72, 82);
 			}
 		} else {
@@ -149,10 +158,12 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 			ctx.fill();
 
 			ctx.fillStyle = settings.labelColor || '#C0C0C0';
+			ctx.strokeText(label, 72, 48);
 			ctx.fillText(label, 72, 48);
 
 			ctx.fillStyle = settings.ipColor || '#FFFFFF';
 			ctx.font = 'bold 18px "Courier New", Consolas, monospace';
+			ctx.strokeText(publicIP || 'No Public IP', 72, 80);
 			ctx.fillText(publicIP || 'No Public IP', 72, 80);
 		}
 
