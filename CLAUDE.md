@@ -83,6 +83,15 @@ export class IPDisplay extends SingletonAction<IPSettings>
 - Optional fields maintain backward compatibility
 - Status dots remain hardcoded (green/orange/red) for connection status
 
+**Status Dot Behavior**:
+- Positioned inline with labels (to the left) using dynamic text measurement
+- Single IP displays: Green (#00FF00) if connected, Red (#FF6B6B) if disconnected
+- Dual IP displays: Green (#00FF00) both connected, Orange (#FFAA00) partial, Red (#FF6B6B) none
+- Calculation: `dotX = 72 - (labelMetrics.width / 2) - offset` (offset: 8-10px)
+- Dual IP: Dot only appears before PUBLIC IP label (not local IP label)
+- Positioned at same Y coordinate as label text for inline appearance
+- Colors hardcoded and not affected by custom color settings
+
 ### Build Process
 
 The build uses Rollup with specific Stream Deck requirements:

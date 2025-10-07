@@ -17,9 +17,10 @@ A comprehensive Stream Deck plugin for IP address monitoring with four button ty
 - **Efficient Timers**: Single timer per action type with proper lifecycle management
 
 ### Visual Design
-- **Visual Status Indicator**: Color-coded connection status dot
-  - 🟢 Green: IP(s) detected and connected
-  - 🔴 Red: No IP connection detected
+- **Visual Status Indicator**: Color-coded connection status dot positioned before labels
+  - Single IP displays: 🟢 Green (connected) or 🔴 Red (disconnected)
+  - Dual IP displays: 🟢 Green (both connected), 🟠 Orange (partial), 🔴 Red (none)
+  - Dot appears inline with the label, not below the IP address
 - **Transparent Background**: Clean design that works with any Stream Deck theme
 - **High-Quality Rendering**: Canvas-based text rendering prevents truncation issues
 - **Optimized Layouts**: Single IP displays use larger fonts and centered positioning
@@ -80,9 +81,9 @@ A comprehensive Stream Deck plugin for IP address monitoring with four button ty
 │    LOCAL IP     │
 │  192.168.1.100  │
 │                 │
-│   PUBLIC IP     │
+│ ● PUBLIC IP     │ ← Status dot
 │  203.0.113.45   │
-│       ●         │ ← Status dot
+│                 │
 └─────────────────┘
 ```
 
@@ -90,9 +91,9 @@ A comprehensive Stream Deck plugin for IP address monitoring with four button ty
 ```
 ┌─────────────────┐
 │                 │
-│    LOCAL IP     │
+│  ● LOCAL IP     │ ← Status dot
 │  192.168.1.100  │
-│       ●         │ ← Status dot
+│                 │
 │                 │
 └─────────────────┘
 ```
