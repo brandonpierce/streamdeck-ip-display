@@ -10,6 +10,8 @@ type ToggleSettings = {
 	customPublicLabel?: string;
 	multilineIP?: boolean;
 	networkInterface?: string;
+	labelColor?: string;
+	ipColor?: string;
 };
 
 @action({ UUID: "io.piercefamily.ip-display.toggle" })
@@ -178,12 +180,12 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				const publicSplit = this.splitIP(publicIP);
 
 				// LOCAL IP Section (Top)
-				ctx.fillStyle = '#C0C0C0';
+				ctx.fillStyle = settings.labelColor || '#C0C0C0';
 				ctx.font = 'bold 13px Arial';
 				const localLabel = settings.customLocalLabel || 'LOCAL IP';
 				ctx.fillText(localLabel, 72, 10);
 
-				ctx.fillStyle = '#FFFFFF';
+				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 20px "Courier New", Consolas, monospace';
 				if (localSplit) {
 					ctx.fillText(localSplit.line1, 72, 27);
@@ -211,10 +213,10 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.arc(publicDotX, 95, 3, 0, 2 * Math.PI);
 				ctx.fill();
 
-				ctx.fillStyle = '#C0C0C0';
+				ctx.fillStyle = settings.labelColor || '#C0C0C0';
 				ctx.fillText(publicLabel, 72, 95);
 
-				ctx.fillStyle = '#FFFFFF';
+				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 20px "Courier New", Consolas, monospace';
 				if (publicSplit) {
 					ctx.fillText(publicSplit.line1, 72, 113);
@@ -224,12 +226,12 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				}
 			} else {
 				// Single-line dual IP display
-				ctx.fillStyle = '#C0C0C0';
+				ctx.fillStyle = settings.labelColor || '#C0C0C0';
 				ctx.font = 'bold 14px Arial';
 				const localLabel = settings.customLocalLabel || 'LOCAL IP';
 				ctx.fillText(localLabel, 72, 22);
 
-				ctx.fillStyle = '#FFFFFF';
+				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 16px "Courier New", Consolas, monospace';
 				ctx.fillText(localIP || 'No Local IP', 72, 45);
 
@@ -251,10 +253,10 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.arc(publicDotX, 82, 3, 0, 2 * Math.PI);
 				ctx.fill();
 
-				ctx.fillStyle = '#C0C0C0';
+				ctx.fillStyle = settings.labelColor || '#C0C0C0';
 				ctx.fillText(publicLabel, 72, 82);
 
-				ctx.fillStyle = '#FFFFFF';
+				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 16px "Courier New", Consolas, monospace';
 				ctx.fillText(publicIP || 'No Public IP', 72, 105);
 			}
@@ -275,10 +277,10 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.arc(localDotX, 35, 4, 0, 2 * Math.PI);
 				ctx.fill();
 
-				ctx.fillStyle = '#C0C0C0';
+				ctx.fillStyle = settings.labelColor || '#C0C0C0';
 				ctx.fillText(localLabel, 72, 35);
 
-				ctx.fillStyle = '#FFFFFF';
+				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 28px "Courier New", Consolas, monospace';
 				if (localSplit) {
 					ctx.fillText(localSplit.line1, 72, 65);
@@ -300,10 +302,10 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.arc(localDotX, 48, 4, 0, 2 * Math.PI);
 				ctx.fill();
 
-				ctx.fillStyle = '#C0C0C0';
+				ctx.fillStyle = settings.labelColor || '#C0C0C0';
 				ctx.fillText(localLabel, 72, 48);
 
-				ctx.fillStyle = '#FFFFFF';
+				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 18px "Courier New", Consolas, monospace';
 				ctx.fillText(localIP || 'No Local IP', 72, 80);
 			}
@@ -324,10 +326,10 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.arc(publicDotX, 35, 4, 0, 2 * Math.PI);
 				ctx.fill();
 
-				ctx.fillStyle = '#C0C0C0';
+				ctx.fillStyle = settings.labelColor || '#C0C0C0';
 				ctx.fillText(publicLabel, 72, 35);
 
-				ctx.fillStyle = '#FFFFFF';
+				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 28px "Courier New", Consolas, monospace';
 				if (publicSplit) {
 					ctx.fillText(publicSplit.line1, 72, 65);
@@ -349,10 +351,10 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.arc(publicDotX, 48, 4, 0, 2 * Math.PI);
 				ctx.fill();
 
-				ctx.fillStyle = '#C0C0C0';
+				ctx.fillStyle = settings.labelColor || '#C0C0C0';
 				ctx.fillText(publicLabel, 72, 48);
 
-				ctx.fillStyle = '#FFFFFF';
+				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 18px "Courier New", Consolas, monospace';
 				ctx.fillText(publicIP || 'No Public IP', 72, 80);
 			}

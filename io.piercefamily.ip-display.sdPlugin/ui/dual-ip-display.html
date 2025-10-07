@@ -29,6 +29,14 @@
         <sdpi-checkbox setting="multilineIP" label="Split IP across two lines (larger font)"></sdpi-checkbox>
     </sdpi-item>
 
+    <sdpi-item label="Label Color">
+        <sdpi-color setting="labelColor"></sdpi-color>
+    </sdpi-item>
+
+    <sdpi-item label="IP Address Color">
+        <sdpi-color setting="ipColor"></sdpi-color>
+    </sdpi-item>
+
     <sdpi-item label="Auto Refresh Interval">
         <sdpi-select setting="refreshInterval" default="600000">
             <option value="0">Manual Only</option>
@@ -43,7 +51,8 @@
     <sdpi-item label="Info">
         <div style="font-size: 12px; color: #666; line-height: 1.4;">
             • Customize label text (max 12 characters)<br>
-            • Leave blank to use default labels<br>
+            • Customize label and IP address colors<br>
+            • Leave blank to use defaults<br>
             • Manual Only: Only refreshes when you press the button<br>
             • Automatic: Refreshes IP addresses at the selected interval<br>
             • Press the button anytime for immediate refresh

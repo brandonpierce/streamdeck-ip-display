@@ -122,10 +122,10 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 			ctx.arc(dotX, 35, 4, 0, 2 * Math.PI);
 			ctx.fill();
 
-			ctx.fillStyle = '#C0C0C0';
+			ctx.fillStyle = settings.labelColor || '#C0C0C0';
 			ctx.fillText(label, 72, 35);
 
-			ctx.fillStyle = '#FFFFFF';
+			ctx.fillStyle = settings.ipColor || '#FFFFFF';
 			ctx.font = 'bold 28px "Courier New", Consolas, monospace';
 			if (publicSplit) {
 				ctx.fillText(publicSplit.line1, 72, 65);
@@ -148,10 +148,10 @@ export class PublicIPOnlyDisplay extends SingletonAction<IPSettings> {
 			ctx.arc(dotX, 48, 4, 0, 2 * Math.PI);
 			ctx.fill();
 
-			ctx.fillStyle = '#C0C0C0';
+			ctx.fillStyle = settings.labelColor || '#C0C0C0';
 			ctx.fillText(label, 72, 48);
 
-			ctx.fillStyle = '#FFFFFF';
+			ctx.fillStyle = settings.ipColor || '#FFFFFF';
 			ctx.font = 'bold 18px "Courier New", Consolas, monospace';
 			ctx.fillText(publicIP || 'No Public IP', 72, 80);
 		}
@@ -254,4 +254,6 @@ type IPSettings = {
 	refreshInterval?: number;
 	customLabel?: string;
 	multilineIP?: boolean;
+	labelColor?: string;
+	ipColor?: string;
 };

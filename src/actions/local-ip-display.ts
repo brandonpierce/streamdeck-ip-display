@@ -147,12 +147,12 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 			const publicSplit = this.splitIP(publicIP);
 
 			// LOCAL IP Section (Top)
-			ctx.fillStyle = '#C0C0C0';
+			ctx.fillStyle = settings.labelColor || '#C0C0C0';
 			ctx.font = 'bold 13px Arial';
 			const localLabel = settings.customLocalLabel || 'LOCAL IP';
 			ctx.fillText(localLabel, 72, 10);
 
-			ctx.fillStyle = '#FFFFFF';
+			ctx.fillStyle = settings.ipColor || '#FFFFFF';
 			ctx.font = 'bold 20px "Courier New", Consolas, monospace';
 			if (localSplit) {
 				ctx.fillText(localSplit.line1, 72, 27);
@@ -180,10 +180,10 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 			ctx.arc(publicDotX, 95, 3, 0, 2 * Math.PI);
 			ctx.fill();
 
-			ctx.fillStyle = '#C0C0C0';
+			ctx.fillStyle = settings.labelColor || '#C0C0C0';
 			ctx.fillText(publicLabel, 72, 95);
 
-			ctx.fillStyle = '#FFFFFF';
+			ctx.fillStyle = settings.ipColor || '#FFFFFF';
 			ctx.font = 'bold 20px "Courier New", Consolas, monospace';
 			if (publicSplit) {
 				ctx.fillText(publicSplit.line1, 72, 113);
@@ -194,12 +194,12 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 		} else {
 			// Single-line mode - original layout
 			// LOCAL IP Section (Top)
-			ctx.fillStyle = '#C0C0C0';
+			ctx.fillStyle = settings.labelColor || '#C0C0C0';
 			ctx.font = 'bold 14px Arial';
 			const localLabel = settings.customLocalLabel || 'LOCAL IP';
 			ctx.fillText(localLabel, 72, 22);
 
-			ctx.fillStyle = '#FFFFFF';
+			ctx.fillStyle = settings.ipColor || '#FFFFFF';
 			ctx.font = 'bold 16px "Courier New", Consolas, monospace';
 			ctx.fillText(localIP || 'No Local IP', 72, 45);
 
@@ -222,10 +222,10 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 			ctx.arc(publicDotX, 82, 3, 0, 2 * Math.PI);
 			ctx.fill();
 
-			ctx.fillStyle = '#C0C0C0';
+			ctx.fillStyle = settings.labelColor || '#C0C0C0';
 			ctx.fillText(publicLabel, 72, 82);
 
-			ctx.fillStyle = '#FFFFFF';
+			ctx.fillStyle = settings.ipColor || '#FFFFFF';
 			ctx.font = 'bold 16px "Courier New", Consolas, monospace';
 			ctx.fillText(publicIP || 'No Public IP', 72, 105);
 		}
@@ -376,4 +376,6 @@ type IPSettings = {
 	customPublicLabel?: string;
 	multilineIP?: boolean;
 	networkInterface?: string;
+	labelColor?: string;
+	ipColor?: string;
 };
