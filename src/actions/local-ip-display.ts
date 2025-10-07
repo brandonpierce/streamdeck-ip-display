@@ -337,10 +337,10 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 
 	private async copyToClipboard(ev: KeyDownEvent<IPSettings>, localIP: string | null, publicIP: string | null): Promise<void> {
 		try {
-			// Format: both IPs with labels
+			// Format: comma-separated for dual IP, plain for single
 			let textToCopy = '';
 			if (localIP && publicIP) {
-				textToCopy = `Local: ${localIP}\nPublic: ${publicIP}`;
+				textToCopy = `${localIP},${publicIP}`;
 			} else if (localIP) {
 				textToCopy = localIP;
 			} else if (publicIP) {

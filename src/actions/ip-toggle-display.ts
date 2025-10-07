@@ -472,7 +472,7 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 			let textToCopy = '';
 			if (mode === 'dual') {
 				if (localIP && publicIP) {
-					textToCopy = `Local: ${localIP}\nPublic: ${publicIP}`;
+					textToCopy = `${localIP},${publicIP}`;
 				} else if (localIP) {
 					textToCopy = localIP;
 				} else if (publicIP) {
