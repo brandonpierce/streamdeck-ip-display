@@ -2,6 +2,10 @@ import streamDeck, { action, KeyDownEvent, KeyUpEvent, SingletonAction, WillAppe
 import { networkInterfaces } from "os";
 import { createCanvas } from "canvas";
 import clipboard from "clipboardy";
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
 
 type ToggleSettings = {
 	mode: 'dual' | 'local' | 'public';
@@ -12,6 +16,8 @@ type ToggleSettings = {
 	networkInterface?: string;
 	labelColor?: string;
 	ipColor?: string;
+	showWifiSSID?: boolean;
+	ssidColor?: string;
 };
 
 @action({ UUID: "io.piercefamily.ip-display.toggle" })
@@ -20,6 +26,8 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 	private visibleActions = new Map<string, WillAppearEvent<ToggleSettings>>();
 	private pressTimers = new Map<string, { timestamp: number, timer: NodeJS.Timeout, localIP: string | null, publicIP: string | null, mode: 'dual' | 'local' | 'public' }>();
 	private readonly LONG_PRESS_THRESHOLD = 800; // milliseconds
+	private wifiSSIDCache: { ssid: string | null; timestamp: number } = { ssid: null, timestamp: 0 };
+	private readonly SSID_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 	override async onWillAppear(ev: WillAppearEvent<ToggleSettings>): Promise<void> {
 		// Store this action instance
 		this.visibleActions.set(ev.action.id, ev);
@@ -30,7 +38,7 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 		// Display initial content
 		const localIP = this.getLocalIPAddress(ev.payload.settings);
 		const publicIP = await this.getPublicIPAddress();
-		const imageDataUri = this.generateToggleImage(localIP, publicIP, mode, ev.payload.settings);
+		const imageDataUri = await this.generateToggleImage(localIP, publicIP, mode, ev.payload.settings);
 		await ev.action.setImage(imageDataUri);
 
 		// Start auto-refresh timer
@@ -68,11 +76,12 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 			// Save the new mode (preserve all other settings)
 			await ev.action.setSettings({ ...ev.payload.settings, mode: nextMode });
 
-			// Manual refresh - force cache bypass for public IP
+			// Manual refresh - force cache bypass for public IP and SSID
 			const localIP = this.getLocalIPAddress(ev.payload.settings);
 			this.publicIPCache = { ip: null, timestamp: 0 }; // Clear cache for fresh fetch
+			this.wifiSSIDCache = { ssid: null, timestamp: 0 }; // Clear SSID cache too
 			const publicIP = await this.getPublicIPAddress();
-			const imageDataUri = this.generateToggleImage(localIP, publicIP, nextMode, ev.payload.settings);
+			const imageDataUri = await this.generateToggleImage(localIP, publicIP, nextMode, ev.payload.settings);
 			await ev.action.setImage(imageDataUri);
 		}
 		// Long press already handled in setTimeout
@@ -106,7 +115,7 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 		const { mode = 'dual' } = ev.payload.settings;
 		const localIP = this.getLocalIPAddress(ev.payload.settings);
 		const publicIP = await this.getPublicIPAddress();
-		const imageDataUri = this.generateToggleImage(localIP, publicIP, mode, ev.payload.settings);
+		const imageDataUri = await this.generateToggleImage(localIP, publicIP, mode, ev.payload.settings);
 		await ev.action.setImage(imageDataUri);
 	}
 
@@ -160,7 +169,7 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 		}
 	}
 
-	private generateToggleImage(localIP: string | null, publicIP: string | null, mode: 'dual' | 'local' | 'public', settings: ToggleSettings): string {
+	private async generateToggleImage(localIP: string | null, publicIP: string | null, mode: 'dual' | 'local' | 'public', settings: ToggleSettings): Promise<string> {
 		const canvas = createCanvas(144, 144);
 		const ctx = canvas.getContext('2d');
 
@@ -178,6 +187,10 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
 
+		// Get WiFi SSID if enabled (only for modes that show local IP)
+		const showSSID = settings.showWifiSSID !== false; // Default true
+		const ssid = (showSSID && (mode === 'dual' || mode === 'local')) ? await this.getWifiSSID() : null;
+
 		if (mode === 'dual') {
 			if (settings.multilineIP) {
 				// Multiline dual IP display
@@ -188,19 +201,30 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.fillStyle = settings.labelColor || '#C0C0C0';
 				ctx.font = 'bold 13px Arial';
 				const localLabel = settings.customLocalLabel || 'LOCAL IP';
-				ctx.strokeText(localLabel, 72, 10);
-				ctx.fillText(localLabel, 72, 10);
+
+				ctx.strokeText(localLabel, 72, 8);
+				ctx.fillText(localLabel, 72, 8);
+
+				// SSID below label if available
+				if (ssid) {
+					ctx.font = '13px Arial';
+					ctx.fillStyle = settings.ssidColor || '#999999';
+					const truncatedSSID = ssid.length > 18 ? ssid.substring(0, 15) + '...' : ssid;
+					ctx.strokeText(truncatedSSID, 72, 26);
+					ctx.fillText(truncatedSSID, 72, 26);
+				}
 
 				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 20px "Courier New", Consolas, monospace';
+				const ipStartY = ssid ? 42 : 37;
 				if (localSplit) {
-					ctx.strokeText(localSplit.line1, 72, 27);
-					ctx.fillText(localSplit.line1, 72, 27);
-					ctx.strokeText(localSplit.line2, 72, 49);
-					ctx.fillText(localSplit.line2, 72, 49);
+					ctx.strokeText(localSplit.line1, 72, ipStartY);
+					ctx.fillText(localSplit.line1, 72, ipStartY);
+					ctx.strokeText(localSplit.line2, 72, ipStartY + 22);
+					ctx.fillText(localSplit.line2, 72, ipStartY + 22);
 				} else {
-					ctx.strokeText('No Local IP', 72, 38);
-					ctx.fillText('No Local IP', 72, 38);
+					ctx.strokeText('No Local IP', 72, ipStartY + 8);
+					ctx.fillText('No Local IP', 72, ipStartY + 8);
 				}
 
 				// PUBLIC IP Section (Bottom - anchored from bottom)
@@ -242,13 +266,24 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				ctx.fillStyle = settings.labelColor || '#C0C0C0';
 				ctx.font = 'bold 14px Arial';
 				const localLabel = settings.customLocalLabel || 'LOCAL IP';
+
 				ctx.strokeText(localLabel, 72, 22);
 				ctx.fillText(localLabel, 72, 22);
 
+				// SSID below label if available
+				if (ssid) {
+					ctx.font = '14px Arial';
+					ctx.fillStyle = settings.ssidColor || '#999999';
+					const truncatedSSID = ssid.length > 18 ? ssid.substring(0, 15) + '...' : ssid;
+					ctx.strokeText(truncatedSSID, 72, 40);
+					ctx.fillText(truncatedSSID, 72, 40);
+				}
+
 				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 16px "Courier New", Consolas, monospace';
-				ctx.strokeText(localIP || 'No Local IP', 72, 45);
-				ctx.fillText(localIP || 'No Local IP', 72, 45);
+				const localIPY = ssid ? 56 : 51;
+				ctx.strokeText(localIP || 'No Local IP', 72, localIPY);
+				ctx.fillText(localIP || 'No Local IP', 72, localIPY);
 
 				// Measure text width for dot positioning
 				ctx.font = 'bold 14px Arial';
@@ -291,23 +326,32 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				// Status indicator dot before label
 				ctx.fillStyle = localIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
 				ctx.beginPath();
-				ctx.arc(localDotX, 35, 4, 0, 2 * Math.PI);
+				ctx.arc(localDotX, 28, 4, 0, 2 * Math.PI);
 				ctx.fill();
 
 				ctx.fillStyle = settings.labelColor || '#C0C0C0';
-				ctx.strokeText(localLabel, 72, 35);
-				ctx.fillText(localLabel, 72, 35);
+				ctx.strokeText(localLabel, 72, 28);
+				ctx.fillText(localLabel, 72, 28);
+
+				// SSID below label if available
+				if (ssid) {
+					ctx.font = '16px Arial';
+					ctx.fillStyle = settings.ssidColor || '#999999';
+					const truncatedSSID = ssid.length > 20 ? ssid.substring(0, 17) + '...' : ssid;
+					ctx.strokeText(truncatedSSID, 72, 48);
+					ctx.fillText(truncatedSSID, 72, 48);
+				}
 
 				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 28px "Courier New", Consolas, monospace';
 				if (localSplit) {
-					ctx.strokeText(localSplit.line1, 72, 65);
-					ctx.fillText(localSplit.line1, 72, 65);
-					ctx.strokeText(localSplit.line2, 72, 100);
-					ctx.fillText(localSplit.line2, 72, 100);
+					ctx.strokeText(localSplit.line1, 72, 76);
+					ctx.fillText(localSplit.line1, 72, 76);
+					ctx.strokeText(localSplit.line2, 72, 111);
+					ctx.fillText(localSplit.line2, 72, 111);
 				} else {
-					ctx.strokeText('No Local IP', 72, 82);
-					ctx.fillText('No Local IP', 72, 82);
+					ctx.strokeText('No Local IP', 72, 87);
+					ctx.fillText('No Local IP', 72, 87);
 				}
 			} else {
 				// Single-line local IP display
@@ -320,17 +364,26 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				// Status indicator dot before label
 				ctx.fillStyle = localIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
 				ctx.beginPath();
-				ctx.arc(localDotX, 48, 4, 0, 2 * Math.PI);
+				ctx.arc(localDotX, 40, 4, 0, 2 * Math.PI);
 				ctx.fill();
 
 				ctx.fillStyle = settings.labelColor || '#C0C0C0';
-				ctx.strokeText(localLabel, 72, 48);
-				ctx.fillText(localLabel, 72, 48);
+				ctx.strokeText(localLabel, 72, 40);
+				ctx.fillText(localLabel, 72, 40);
+
+				// SSID below label if available
+				if (ssid) {
+					ctx.font = '16px Arial';
+					ctx.fillStyle = settings.ssidColor || '#999999';
+					const truncatedSSID = ssid.length > 20 ? ssid.substring(0, 17) + '...' : ssid;
+					ctx.strokeText(truncatedSSID, 72, 60);
+					ctx.fillText(truncatedSSID, 72, 60);
+				}
 
 				ctx.fillStyle = settings.ipColor || '#FFFFFF';
 				ctx.font = 'bold 18px "Courier New", Consolas, monospace';
-				ctx.strokeText(localIP || 'No Local IP', 72, 80);
-				ctx.fillText(localIP || 'No Local IP', 72, 80);
+				ctx.strokeText(localIP || 'No Local IP', 72, 90);
+				ctx.fillText(localIP || 'No Local IP', 72, 90);
 			}
 		} else {
 			if (settings.multilineIP) {
@@ -428,6 +481,59 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 		return null;
 	}
 
+	private async getWifiSSID(): Promise<string | null> {
+		const now = Date.now();
+
+		// Return cached SSID if it's still valid
+		if (this.wifiSSIDCache.ssid && (now - this.wifiSSIDCache.timestamp) < this.SSID_CACHE_DURATION) {
+			return this.wifiSSIDCache.ssid;
+		}
+
+		try {
+			let command: string;
+			let parseOutput: (output: string) => string | null;
+
+			if (process.platform === 'darwin') {
+				// macOS - try system_profiler first (works on Sequoia 15+)
+				command = 'system_profiler SPAirPortDataType';
+				parseOutput = (output: string) => {
+					// Look for "Current Network Information:" followed by SSID
+					const match = output.match(/Current Network Information:[\s\S]*?\n\s+([^:]+):/);
+					if (match && match[1] && match[1].trim()) {
+						return match[1].trim();
+					}
+					return null;
+				};
+			} else if (process.platform === 'win32') {
+				// Windows - use netsh
+				command = 'netsh wlan show interfaces';
+				parseOutput = (output: string) => {
+					// Look for "SSID" field (not "Profile")
+					const match = output.match(/^\s*SSID\s*:\s*(.+)$/m);
+					if (match && match[1] && match[1].trim()) {
+						return match[1].trim();
+					}
+					return null;
+				};
+			} else {
+				// Unsupported platform
+				return null;
+			}
+
+			// Execute command with 5 second timeout
+			const { stdout } = await execAsync(command, { timeout: 5000 });
+			const ssid = parseOutput(stdout);
+
+			// Cache the result (even if null)
+			this.wifiSSIDCache = { ssid, timestamp: now };
+			return ssid;
+		} catch (error) {
+			// Command failed (no WiFi, Ethernet, or other error) - return null silently
+			streamDeck.logger.debug('WiFi SSID detection failed:', error);
+			return null;
+		}
+	}
+
 	private publicIPCache: { ip: string | null; timestamp: number } = { ip: null, timestamp: 0 };
 	private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
@@ -487,7 +593,7 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				const { mode = 'dual' } = actionEvent.payload.settings;
 				const localIP = this.getLocalIPAddress(actionEvent.payload.settings);
 				const publicIP = await this.getPublicIPAddress();
-				const imageDataUri = this.generateToggleImage(localIP, publicIP, mode, actionEvent.payload.settings);
+				const imageDataUri = await this.generateToggleImage(localIP, publicIP, mode, actionEvent.payload.settings);
 				await actionEvent.action.setImage(imageDataUri);
 			} catch (error) {
 				streamDeck.logger.warn('Failed to refresh toggle IP display:', error);

@@ -21,6 +21,11 @@ A comprehensive Stream Deck plugin for IP address monitoring with four button ty
   - Single IP displays: 🟢 Green (connected) or 🔴 Red (disconnected)
   - Dual IP displays: 🟢 Green (both connected), 🟠 Orange (partial), 🔴 Red (none)
   - Dot appears inline with the label, not below the IP address
+- **WiFi Network Name (SSID)**: Displays your connected WiFi network name below the LOCAL IP label
+  - Cross-platform support: Windows and macOS
+  - 5-minute caching for performance
+  - Optional: Toggle on/off in property inspector (enabled by default)
+  - Shows only for local IP displays, not public IP
 - **Transparent Background**: Clean design that works with any Stream Deck theme
 - **High-Quality Rendering**: Canvas-based text rendering prevents truncation issues
 - **Optimized Layouts**: Single IP displays use larger fonts and centered positioning
@@ -79,11 +84,10 @@ A comprehensive Stream Deck plugin for IP address monitoring with four button ty
 ```
 ┌─────────────────┐
 │    LOCAL IP     │
+│     MyWiFi      │ ← WiFi SSID (optional)
 │  192.168.1.100  │
-│                 │
 │ ● PUBLIC IP     │ ← Status dot
 │  203.0.113.45   │
-│                 │
 └─────────────────┘
 ```
 
@@ -92,8 +96,8 @@ A comprehensive Stream Deck plugin for IP address monitoring with four button ty
 ┌─────────────────┐
 │                 │
 │  ● LOCAL IP     │ ← Status dot
+│     MyWiFi      │ ← WiFi SSID (optional)
 │  192.168.1.100  │
-│                 │
 │                 │
 └─────────────────┘
 ```
@@ -126,6 +130,13 @@ Select any IP Display button in Stream Deck software to access the property insp
 - **Multi-line**: Split IP addresses across two lines with larger fonts
 - Improves readability for longer IP addresses
 - Automatically adjusts spacing to prevent edge clipping
+
+#### WiFi Network Name
+- **Show WiFi network name (SSID)**: Toggle display of WiFi network name (default: enabled)
+- Appears below LOCAL IP label in gray text
+- Only shows for local IP displays (not public IP)
+- Works on Windows and macOS
+- No SSID shown when using Ethernet or disconnected from WiFi
 
 #### Custom Colors (All actions)
 - **Label Color**: Choose custom color for label text
@@ -234,6 +245,14 @@ The plugin scans your network interfaces using Node.js `os.networkInterfaces()` 
 
 ### Public IP Detection
 Public IP is fetched from the [ipify.org](https://www.ipify.org/) API, a free and reliable IP detection service. Results are cached for 5 minutes to minimize API calls.
+
+### WiFi SSID Detection
+WiFi network name is detected using native OS commands for optimal compatibility:
+- **Windows**: Uses `netsh wlan show interfaces` to detect connected WiFi SSID
+- **macOS**: Uses `system_profiler SPAirPortDataType` (works on macOS 15 Sequoia and later)
+- Results are cached for 5 minutes to minimize command executions
+- Fails silently when using Ethernet or disconnected from WiFi
+- Only displayed for local IP addresses, not public IP
 
 ### Canvas Rendering
 All text is rendered using HTML5 Canvas to ensure pixel-perfect display and prevent text truncation issues that can occur with Stream Deck's built-in text rendering.
