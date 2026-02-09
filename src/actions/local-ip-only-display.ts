@@ -2,6 +2,10 @@ import streamDeck, { action, KeyDownEvent, KeyUpEvent, SingletonAction, WillAppe
 import { networkInterfaces } from "os";
 import { createCanvas } from "canvas";
 import clipboard from "clipboardy";
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
 
 @action({ UUID: "io.piercefamily.ip-display.local-ip" })
 export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
@@ -9,13 +13,15 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 	private visibleActions = new Map<string, WillAppearEvent<IPSettings>>();
 	private pressTimers = new Map<string, { timestamp: number, timer: NodeJS.Timeout, localIP: string | null }>();
 	private readonly LONG_PRESS_THRESHOLD = 800; // milliseconds
+	private wifiSSIDCache: { ssid: string | null; timestamp: number } = { ssid: null, timestamp: 0 };
+	private readonly SSID_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 	override async onWillAppear(ev: WillAppearEvent<IPSettings>): Promise<void> {
 		// Store this action instance
 		this.visibleActions.set(ev.action.id, ev);
 
 		// Display initial content
 		const localIP = this.getLocalIPAddress(ev.payload.settings);
-		const imageDataUri = this.generateLocalIPImage(localIP, ev.payload.settings);
+		const imageDataUri = await this.generateLocalIPImage(localIP, ev.payload.settings);
 		await ev.action.setImage(imageDataUri);
 
 		// Start auto-refresh timer
@@ -46,7 +52,7 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 		if (duration < this.LONG_PRESS_THRESHOLD) {
 			// Short press - refresh display
 			const localIP = this.getLocalIPAddress(ev.payload.settings);
-			const imageDataUri = this.generateLocalIPImage(localIP, ev.payload.settings);
+			const imageDataUri = await this.generateLocalIPImage(localIP, ev.payload.settings);
 			await ev.action.setImage(imageDataUri);
 		}
 		// Long press already handled in setTimeout
@@ -78,7 +84,7 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 
 		// Refresh display with new settings
 		const localIP = this.getLocalIPAddress(ev.payload.settings);
-		const imageDataUri = this.generateLocalIPImage(localIP, ev.payload.settings);
+		const imageDataUri = await this.generateLocalIPImage(localIP, ev.payload.settings);
 		await ev.action.setImage(imageDataUri);
 	}
 
@@ -123,7 +129,7 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 		};
 	}
 
-	private generateLocalIPImage(localIP: string | null, settings: IPSettings): string {
+	private async generateLocalIPImage(localIP: string | null, settings: IPSettings): Promise<string> {
 		const canvas = createCanvas(144, 144);
 		const ctx = canvas.getContext('2d');
 
@@ -141,6 +147,10 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
 
+		// Get WiFi SSID if enabled
+		const showSSID = settings.showWifiSSID !== false; // Default true
+		const ssid = showSSID ? await this.getWifiSSID() : null;
+
 		if (settings.multilineIP) {
 			// Multiline mode - larger font, split IP
 			const localSplit = this.splitIP(localIP);
@@ -155,23 +165,32 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 			// Status indicator dot before label
 			ctx.fillStyle = localIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
 			ctx.beginPath();
-			ctx.arc(dotX, 35, 4, 0, 2 * Math.PI);
+			ctx.arc(dotX, 28, 4, 0, 2 * Math.PI);
 			ctx.fill();
 
 			ctx.fillStyle = settings.labelColor || '#C0C0C0';
-			ctx.strokeText(label, 72, 35);
-			ctx.fillText(label, 72, 35);
+			ctx.strokeText(label, 72, 28);
+			ctx.fillText(label, 72, 28);
+
+			// SSID below label if available
+			if (ssid) {
+				ctx.font = '16px Arial';
+				ctx.fillStyle = settings.ssidColor || '#999999';
+				const truncatedSSID = ssid.length > 20 ? ssid.substring(0, 17) + '...' : ssid;
+				ctx.strokeText(truncatedSSID, 72, 48);
+				ctx.fillText(truncatedSSID, 72, 48);
+			}
 
 			ctx.fillStyle = settings.ipColor || '#FFFFFF';
 			ctx.font = 'bold 28px "Courier New", Consolas, monospace';
 			if (localSplit) {
-				ctx.strokeText(localSplit.line1, 72, 65);
-				ctx.fillText(localSplit.line1, 72, 65);
-				ctx.strokeText(localSplit.line2, 72, 100);
-				ctx.fillText(localSplit.line2, 72, 100);
+				ctx.strokeText(localSplit.line1, 72, 76);
+				ctx.fillText(localSplit.line1, 72, 76);
+				ctx.strokeText(localSplit.line2, 72, 111);
+				ctx.fillText(localSplit.line2, 72, 111);
 			} else {
-				ctx.strokeText('No Local IP', 72, 82);
-				ctx.fillText('No Local IP', 72, 82);
+				ctx.strokeText('No Local IP', 72, 87);
+				ctx.fillText('No Local IP', 72, 87);
 			}
 		} else {
 			// Single-line mode - original layout
@@ -185,17 +204,26 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 			// Status indicator dot before label
 			ctx.fillStyle = localIP ? '#00FF00' : '#FF6B6B'; // Green if connected, red if not
 			ctx.beginPath();
-			ctx.arc(dotX, 48, 4, 0, 2 * Math.PI);
+			ctx.arc(dotX, 40, 4, 0, 2 * Math.PI);
 			ctx.fill();
 
 			ctx.fillStyle = settings.labelColor || '#C0C0C0';
-			ctx.strokeText(label, 72, 48);
-			ctx.fillText(label, 72, 48);
+			ctx.strokeText(label, 72, 40);
+			ctx.fillText(label, 72, 40);
+
+			// SSID below label if available
+			if (ssid) {
+				ctx.font = '16px Arial';
+				ctx.fillStyle = settings.ssidColor || '#999999';
+				const truncatedSSID = ssid.length > 20 ? ssid.substring(0, 17) + '...' : ssid;
+				ctx.strokeText(truncatedSSID, 72, 60);
+				ctx.fillText(truncatedSSID, 72, 60);
+			}
 
 			ctx.fillStyle = settings.ipColor || '#FFFFFF';
 			ctx.font = 'bold 18px "Courier New", Consolas, monospace';
-			ctx.strokeText(localIP || 'No Local IP', 72, 80);
-			ctx.fillText(localIP || 'No Local IP', 72, 80);
+			ctx.strokeText(localIP || 'No Local IP', 72, 90);
+			ctx.fillText(localIP || 'No Local IP', 72, 90);
 		}
 
 		// Convert to base64 data URI
@@ -237,6 +265,59 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 		return null;
 	}
 
+	private async getWifiSSID(): Promise<string | null> {
+		const now = Date.now();
+
+		// Return cached SSID if it's still valid
+		if (this.wifiSSIDCache.ssid && (now - this.wifiSSIDCache.timestamp) < this.SSID_CACHE_DURATION) {
+			return this.wifiSSIDCache.ssid;
+		}
+
+		try {
+			let command: string;
+			let parseOutput: (output: string) => string | null;
+
+			if (process.platform === 'darwin') {
+				// macOS - try system_profiler first (works on Sequoia 15+)
+				command = 'system_profiler SPAirPortDataType';
+				parseOutput = (output: string) => {
+					// Look for "Current Network Information:" followed by SSID
+					const match = output.match(/Current Network Information:[\s\S]*?\n\s+([^:]+):/);
+					if (match && match[1] && match[1].trim()) {
+						return match[1].trim();
+					}
+					return null;
+				};
+			} else if (process.platform === 'win32') {
+				// Windows - use netsh
+				command = 'netsh wlan show interfaces';
+				parseOutput = (output: string) => {
+					// Look for "SSID" field (not "Profile")
+					const match = output.match(/^\s*SSID\s*:\s*(.+)$/m);
+					if (match && match[1] && match[1].trim()) {
+						return match[1].trim();
+					}
+					return null;
+				};
+			} else {
+				// Unsupported platform
+				return null;
+			}
+
+			// Execute command with 5 second timeout
+			const { stdout } = await execAsync(command, { timeout: 5000 });
+			const ssid = parseOutput(stdout);
+
+			// Cache the result (even if null)
+			this.wifiSSIDCache = { ssid, timestamp: now };
+			return ssid;
+		} catch (error) {
+			// Command failed (no WiFi, Ethernet, or other error) - return null silently
+			streamDeck.logger.debug('WiFi SSID detection failed:', error);
+			return null;
+		}
+	}
+
 	private startRefreshTimer(settings: IPSettings): void {
 		// Clear existing timer
 		if (this.refreshTimer) {
@@ -260,7 +341,7 @@ export class LocalIPOnlyDisplay extends SingletonAction<IPSettings> {
 		for (const actionEvent of this.visibleActions.values()) {
 			try {
 				const localIP = this.getLocalIPAddress(actionEvent.payload.settings);
-				const imageDataUri = this.generateLocalIPImage(localIP, actionEvent.payload.settings);
+				const imageDataUri = await this.generateLocalIPImage(localIP, actionEvent.payload.settings);
 				await actionEvent.action.setImage(imageDataUri);
 			} catch (error) {
 				streamDeck.logger.warn('Failed to refresh local IP display:', error);
@@ -298,4 +379,6 @@ type IPSettings = {
 	networkInterface?: string;
 	labelColor?: string;
 	ipColor?: string;
+	showWifiSSID?: boolean;
+	ssidColor?: string;
 };

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Stream Deck plugin that displays IP addresses on Stream Deck buttons with configurable auto-refresh functionality. It offers four button types: Dual IP Display (both local and public), Local IP Only, Public IP Only, and IP Toggle Display (cycles between modes). Features Canvas-based rendering for pixel-perfect display and user-configurable refresh intervals via property inspector UI.
+This is a Stream Deck plugin that displays IP addresses on Stream Deck buttons with configurable auto-refresh functionality. It offers four button types: Dual IP Display (both local and public), Local IP Only, Public IP Only, and IP Toggle Display (cycles between modes). Features Canvas-based rendering for pixel-perfect display, WiFi SSID display, and user-configurable refresh intervals via property inspector UI.
 
 ## Development Commands
 
@@ -51,6 +51,22 @@ export class IPDisplay extends SingletonAction<IPSettings>
   - Settings persist with `networkInterface?: string` field
 - Public IP: Fetches from ipify.org API with 5-minute caching to avoid rate limits
 - Status indicator: Color-coded dot (green/orange/red) based on connection status
+
+**WiFi SSID Detection**:
+- Uses native OS commands via `child_process.exec()` with `promisify` wrapper
+- Platform-specific command detection:
+  - Windows: `netsh wlan show interfaces` (regex: `/^\s*SSID\s*:\s*(.+)$/m`)
+  - macOS: `system_profiler SPAirPortDataType` (regex: `/Current Network Information:[\s\S]*?\n\s+([^:]+):/`)
+  - Linux/other: Returns `null` (not supported)
+- 5-minute caching (`SSID_CACHE_DURATION = 5 * 60 * 1000`) with timestamp tracking
+- Timeout: 5 seconds per command execution
+- Fails silently if command fails (Ethernet, disconnected, or unsupported platform)
+- Cache structure: `{ ssid: string | null; timestamp: number }`
+- Only displayed for local IP (not public IP) when `showWifiSSID !== false` (default true)
+- Canvas rendering: Gray text (#999999) below LOCAL IP label
+  - Font: 10-11px Arial (varies by mode)
+  - Truncation: 15-20 chars depending on layout with "..." suffix
+  - Position: 12-15px below label text
 
 **Clipboard Copy Pattern**:
 - Long-press detection using 800ms threshold (`LONG_PRESS_THRESHOLD`)
@@ -205,6 +221,7 @@ type IPSettings = {
   networkInterface?: string;        // Specific interface or empty for auto-detect
   labelColor?: string;              // Custom label color (default: #C0C0C0 silver)
   ipColor?: string;                 // Custom IP address color (default: #FFFFFF white)
+  showWifiSSID?: boolean;           // Show WiFi network name (default: true)
 };
 
 type ToggleSettings = IPSettings & {
@@ -273,3 +290,15 @@ type ToggleSettings = IPSettings & {
 - Blank/empty values default to "LOCAL IP" / "PUBLIC IP"
 - Labels are optional - all actions work without customization
 - Canvas text measurement can validate label width before rendering
+
+### WiFi SSID Feature
+- Native OS commands preferred over npm packages (most are unmaintained)
+- macOS Sequoia 15+: Traditional `networksetup -getairportnetwork` returns `<redacted>`
+- Use `system_profiler SPAirPortDataType` for modern macOS compatibility
+- 5-minute cache prevents excessive command executions
+- `getWifiSSID()` must be `async` and all calls must use `await`
+- SSID only shown when `mode === 'dual' || mode === 'local'` (toggle action)
+- Canvas layout positions SSID below label (not inline) for better screen real estate
+- Fail silently with `streamDeck.logger.debug()` - never show errors to user
+- Gray color (#999999) distinguishes SSID from primary content (label/IP)
+- Make `generateImage()` methods async when adding SSID support

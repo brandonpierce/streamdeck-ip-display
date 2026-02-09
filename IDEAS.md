@@ -28,12 +28,13 @@ Professional custom icons for plugin and all four action types with consistent d
 **Status**: ✅ Implemented (v1.2.0 - 2025-01-06)
 Color picker controls in property inspector allow users to customize label text and IP address colors. Supports all four action types with automatic fallback to defaults (silver for labels, white for IP addresses).
 
+### 7. WiFi Network Name (SSID)
+**Status**: ✅ Implemented (v1.3.0 - 2025-01-07)
+Displays connected WiFi network name (SSID) below the LOCAL IP label. Uses native OS commands (Windows: `netsh wlan show interfaces`, macOS: `system_profiler SPAirPortDataType`) with 5-minute caching. Toggle on/off in property inspector (enabled by default). Shows only for local IP displays, not public IP.
+
 ## High-Value, Easy Additions
 
-### 1. WiFi Network Name (SSID)
-Display network name alongside local IP, especially useful when switching between networks.
-
-### 2. Better Error States
+### 1. Better Error States
 More specific visual indicators for different failures:
 - No internet connection
 - API timeout
@@ -76,19 +77,18 @@ Let users specify their own public IP service (privacy/reliability).
 With the core features now implemented, the most impactful features to add next would be:
 
 ### Near-term (High Value)
-1. **WiFi Network Name (SSID)** - Helps users identify which network they're on
-2. **Better Error States** - More granular feedback for troubleshooting
-3. **IP Change Detection** - Visual alerts when IP addresses change
+1. **Better Error States** - More granular feedback for troubleshooting
+2. **IP Change Detection** - Visual alerts when IP addresses change
 
 ### Mid-term (Nice to Have)
-4. **IPv6 Support** - Growing relevance as adoption increases
-5. **VPN Status Indicator** - Useful for privacy-conscious users
-6. **QR Code Display Mode** - Easy mobile device connection sharing
+3. **IPv6 Support** - Growing relevance as adoption increases
+4. **VPN Status Indicator** - Useful for privacy-conscious users
+5. **QR Code Display Mode** - Easy mobile device connection sharing
 
 ### Long-term (Advanced)
-7. **Connection Quality/Ping** - Network performance monitoring
-8. **Custom API Endpoint** - Privacy and reliability options
-9. **IP History/Log** - Track changes over time
+6. **Connection Quality/Ping** - Network performance monitoring
+7. **Custom API Endpoint** - Privacy and reliability options
+8. **IP History/Log** - Track changes over time
 
 ## New Ideas
 
