@@ -115,7 +115,7 @@ export class IPDisplay extends SingletonAction<IPSettings> {
 				}
 			}
 
-			streamDeck.ui.current?.sendToPropertyInspector({
+			streamDeck.ui.sendToPropertyInspector({
 				event: 'getNetworkInterfaces',
 				items: interfaces.map(name => ({
 					label: name,

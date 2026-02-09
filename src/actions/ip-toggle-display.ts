@@ -140,7 +140,7 @@ export class ToggleIPDisplay extends SingletonAction<ToggleSettings> {
 				}
 			}
 
-			streamDeck.ui.current?.sendToPropertyInspector({
+			streamDeck.ui.sendToPropertyInspector({
 				event: 'getNetworkInterfaces',
 				items: interfaces.map(name => ({
 					label: name,
